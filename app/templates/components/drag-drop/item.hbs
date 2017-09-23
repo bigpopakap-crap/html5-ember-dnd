@@ -1,0 +1,16 @@
+{{! Note: we put the draggable attribute and the drag handlers
+    here instead of on the component so that IE and Edge display
+    the correct ghost while dragging. Without this, it'll look like
+    you're dragging the drop-area div }}
+<div class="drag-drop__drag-content"
+     draggable={{isDraggable}}
+     onmouseenter={{action "mouseEnter"}}
+     onmouseleave={{action "mouseLeave"}}
+     onmousedown={{action "mouseDown"}}
+     onmouseup={{action "mouseUp"}}
+     ondragstart={{action "dragStart"}}
+     ondrag={{action "drag"}}
+     ondragend={{action "dragEnd"}}>
+    {{yield}}
+</div>
+<div class="drag-drop__drop-area"></div>

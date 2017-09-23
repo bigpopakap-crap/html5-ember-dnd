@@ -1,0 +1,13 @@
+{{#each _sortableItems key="sortKey" as |sortableItem|}}
+    {{#drag-drop/item class=itemClass
+                 dragHandleSelector=itemDragHandleSelector
+                 isDraggable=isSortable
+                 isDroppable=isSortable
+                 data=sortableItem.sortKey
+                 onDragStart="onDragStart"
+                 onDragOver="onDragOver"
+                 onDrop="onDrop"
+                 onDragEnd="onDragEnd"}}
+        {{yield sortableItem.content}}
+    {{/drag-drop/item}}
+{{/each}}

@@ -1,5 +1,19 @@
-{{!-- The following component displays Ember's default welcome message. --}}
-{{welcome-page}}
-{{!-- Feel free to remove this! --}}
+<div>Interact</div>
+<div class="drag-drop-container">
+    {{#drag-drop/set items
+                     isSortable=true
+                     itemSortKeyProperty="key"
+                     parentSelector=".drag-drop-container"
+                     itemClass="draggable"
+                     shouldAnimate=true
+                     as |item|}}
+        <div class="tile">{{item.text}}</div>
+    {{/drag-drop/set}}
+</div>
 
-{{outlet}}
+<div>View Data</div>
+<div>
+    {{#each items as |item|}}
+        <span>{{item.key}}</span>
+    {{/each}}
+</div>
