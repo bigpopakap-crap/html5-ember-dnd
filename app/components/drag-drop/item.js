@@ -3,6 +3,8 @@ import Ember from 'ember';
 // IE11 and Edge only support "text"
 const DATA_TRANSFER_TYPE = 'text';
 
+const TOUCH_DATA_TRANSFER_KEY = 'dragDrop_component_dragData';
+
 export default Ember.Component.extend({
   // PASSED IN
   data: '', // REQUIRED - a string to pass along with the element
@@ -10,6 +12,7 @@ export default Ember.Component.extend({
   isDroppable: false, // use this flag to enable/disable this element as a drop target
   dragHandleSelector: null, // (optional) a CSS selector of the part of this element from
  														// where a drag can be initiated
+  shouldHandleTouch: true,
 
   // SHOULD PROBABLY BE PRIVATE
   dragEffectAllowed: 'all', // HTML5 drag property that tells the drop area which kinds of actions
@@ -23,6 +26,7 @@ export default Ember.Component.extend({
   isDragging: false,
   isDraggedOver: false,
   dragTarget: null, // the target element of the drag (which part of the element the mouse is on)
+  $dragOverElem: null, // used for touch dragging, it's the element we are currently dragging over
   $dragGhost: null, // the JQuery element that we are moving around with the drag
   									// we do this because HTML5 drag and drop doesn't do a good job with that
 
@@ -72,7 +76,7 @@ export default Ember.Component.extend({
 
       const $dragGhost = this._createDragGhost(eventData);
 
-      // TODO touch events don't have dataTransfer. If we get this to work for touch, then we can probably get rid of this for HTML5 drag/drop
+      // Touch events don't have dataTransfer
       if (evt.dataTransfer) {
         evt.dataTransfer.setData(DATA_TRANSFER_TYPE, this.get('data'));
         evt.dataTransfer.effectAllowed = this.get('dragEffectAllowed');
@@ -122,7 +126,11 @@ export default Ember.Component.extend({
   dragEnter(evt) {
     if (this.get('isDroppable')) {
       this.set('isDraggedOver', true);
-      evt.dataTransfer.dropEffect = this.get('dropEffect');
+
+      // Touch events don't have dataTransfer
+      if (evt.dataTransfer) {
+        evt.dataTransfer.dropEffect = this.get('dropEffect');
+      }
 
       this.sendAction(
         'onDragEnter',
@@ -170,11 +178,20 @@ export default Ember.Component.extend({
 
   drop(evt) {
     if (this.get('isDroppable')) {
+      evt = this._maybeOriginalEvent(evt);
+
       this.set('isDraggedOver', false);
+
+      // Touch events don't have dataTransfer, so we
+      // have to fall back on our simulated event hack
+      const dragData = evt.dataTransfer
+        ? evt.dataTransfer.getData(DATA_TRANSFER_TYPE)
+        : $(evt.target).data(TOUCH_DATA_TRANSFER_KEY);
+
       this.sendAction(
         'onDrop',
         this._eventData(evt, {
-          dragData: evt.dataTransfer.getData(DATA_TRANSFER_TYPE),
+          dragData,
           dropData: this.get('data')
         })
       );
@@ -184,38 +201,87 @@ export default Ember.Component.extend({
   },
 
   /* BEGIN TOUCH EVENTS **************/
-
-  // TODO map these events: mouseleave, mouseup | dragstart(evt), drag(evt), dragend(evt)
-
   touchStart(evt) {
-    console.log('touchStart ' + this.get('data'));
+    if (!this.get('shouldHandleTouch')) {
+      return false;
+    }
 
     this.send('mouseEnter');
     this.send('mouseDown', evt);
+    return true;
   },
 
   touchMove(evt) {
-    console.log('touchMove ' + this.get('data'));
+    if (!this.get('shouldHandleTouch')) {
+      return false;
+    }
+
+    evt = this._maybeOriginalEvent(evt);
 
     if (!this.get('isDragging')) {
       this.send('dragStart', evt);
     }
     this.send('drag', evt);
+
+    /*
+     * BEGIN TOUCH HACKS
+     * Simulate the drop events (dragEnter dragOver dragLeave)
+     * on elements that we are moving over
+     */
+    const touch = evt.touches && evt.touches[0];
+    if (touch) {
+      const $dragOverElem = Ember.$(document.elementFromPoint(
+        touch.clientX,
+        touch.clientY
+      ));
+      const $prevDragOverElem = this.get('$dragOverElem');
+      this.set('$dragOverElem', $dragOverElem);
+
+      // simulate the drop events on the elements we are currently
+      // and were previously dragging over
+      if (!$dragOverElem.is($prevDragOverElem)) {
+        if ($prevDragOverElem) {
+          $prevDragOverElem.trigger('dragleave');
+        }
+        $dragOverElem.trigger('dragenter');
+      }
+      $dragOverElem.trigger('dragover');
+    }
+
+    return true;
   },
 
   touchEnd(evt) {
-    console.log('touchEnd ' + this.get('data'));
+    if (!this.get('shouldHandleTouch')) {
+      return false;
+    }
 
+    evt = this._maybeOriginalEvent(evt);
+
+    const $dragOverElem = this.get('$dragOverElem');
+    if ($dragOverElem) {
+      // HACK ALERT: set the dragItemData on the drop target element
+      // using JQuery data since we cannot pass it any other way
+      $dragOverElem.data(TOUCH_DATA_TRANSFER_KEY, this.get('data'));
+      $dragOverElem.trigger('drop');
+    }
+
+    this.touchCancel(evt);
+    return true;
+  },
+
+  touchCancel(evt) {
+    if (!this.get('shouldHandleTouch')) {
+      return false;
+    }
+
+    this.set('$dragOverElem', null);
     if (this.get('isDragging')) {
       this.send('dragEnd', evt);
     }
     this.send('mouseUp', evt);
     this.send('mouseLeave');
-  },
-
-  touchCancel(evt) {
-    console.log('touchCancel ' + this.get('data') + ', forwarding to touchEnd');
-    this.send('touchEnd', evt);
+    return true;
   },
 
   /* BEGIN HELPERS *******************/
@@ -263,8 +329,17 @@ export default Ember.Component.extend({
     this.set('$dragGhost', null);
   },
 
+  _maybeOriginalEvent(evt) {
+    return (evt && evt.originalEvent) || evt;
+  },
+
+  _maybeTouchEvent(evt) {
+    const orig = this._maybeOriginalEvent(evt);
+    return (orig.touches && orig.touches[0]) || orig;
+  },
+
   _eventData(evt, extraParams) {
-    const params = (evt && evt.originalEvent) || evt;
+    const params = this._maybeTouchEvent(evt);
 
     return Ember.$.extend(
       true,

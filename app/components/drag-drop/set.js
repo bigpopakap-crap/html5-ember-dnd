@@ -187,6 +187,7 @@ export default Ember.Component.extend({
   resetAfterDropOutside: false, // should we revert the order if the drop ends
   															// outside the list of items?
   shouldAnimate: false,
+  shouldHandleTouch: true,
 
   // PRIVATE
   _originalItems: null, // the original list of items stored
@@ -285,7 +286,7 @@ export default Ember.Component.extend({
         this.sendAction('afterDrop', {
           draggedItemKey,
           dropItemKey: this._droppedItemKey // use the saved dropItem key because otherwise,
-          // it will look like we're dropping the item on itself
+                                            // it will look like we're dropping the item on itself
         });
       }
     },
