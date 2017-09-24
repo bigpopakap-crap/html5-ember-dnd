@@ -292,7 +292,14 @@ export default Ember.Component.extend({
 
     onDragEnd() {
       if (this.get('resetAfterDropOutside') && !this._dropSucceeded) {
+        const previousItemKeys = this.get('_sortableItems').mapBy('sortKey');
         this.set('items', this._originalItems);
+
+        if (this.get('shouldAnimate')) {
+          const $scope = Ember.$(this.get('parentSelector'));
+          const currentItemKeys = this.get('_sortableItems').mapBy('sortKey');
+          animateDrag($scope, previousItemKeys, currentItemKeys);
+        }
       }
 
       // forget all the state we were tracking
