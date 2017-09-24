@@ -5,10 +5,11 @@
      are relatively positioned in order to do its animations */
   position: relative;
   box-sizing: border-box;
-  overflow: hidden;
 }
 
-.drag-drop--dragging .drag-drop__drag-content {
+.drag-drop__drag-content {
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -39,6 +40,10 @@
 }
 
 /* move the thing we're dragging lower than the others while it is animating */
+.drag-drop__drag-content--ghost {
+  /* TODO this can maybe be removed. Was added initially to make sure the ghost never goes behind any other element */
+  z-index: 4;
+}
 .drag-drop--during-animation {
   z-index: 2;
 }
@@ -64,11 +69,16 @@
 
 .draggable .drag-drop__drop-area {
   background: white;
-  border: dashed 1px gray;
+  outline: dashed 1px gray;
 }
 
-.draggable.drag-drop--hovered {
+.draggable.drag-drop--hovered,
+.draggable.drag-drop--pressed {
   outline-width: 2px;
+}
+
+.draggable.drag-drop--pressed {
+  outline-color: black;
 }
 
 .draggable.drag-drop--dragging {
@@ -82,6 +92,7 @@
 
 .tile {
   font-size: 12pt;
+  background: white;
 }
 
 .tile .title {

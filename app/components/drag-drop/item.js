@@ -33,6 +33,7 @@ export default Ember.Component.extend({
   classNames: ['drag-drop'],
   classNameBindings: [
     'isHovered:drag-drop--hovered',
+    'isPressed:drag-drop--pressed',
     'isDraggable:drag-drop--draggable',
     'isDragging:drag-drop--dragging',
     'isDroppable:drag-drop--droppable',
@@ -49,15 +50,18 @@ export default Ember.Component.extend({
 
     mouseLeave() {
       this.set('isHovered', false);
+      this.set('isPressed', false);
     },
 
     mouseDown(evt) {
       this.set('isHovered', false);
+      this.set('isPressed', true);
       this.set('dragTarget', evt.target);
     },
 
     mouseUp() {
       this.set('isHovered', true);
+      this.set('isPressed', false);
       this.set('dragTarget', null);
     },
 
@@ -210,6 +214,18 @@ export default Ember.Component.extend({
 
     this.send('mouseEnter');
     this.send('mouseDown', evt);
+
+    /*
+     * BEGIN TOUCH HACKS
+     * Remember where on this element (the "offset") the touch was
+     * so that we can accurately position the ghost later
+     */
+    const touch = this._maybeTouchEvent(evt);
+    const thisOffset = this.$().offset();
+
+    this.set('_touchOffsetX', touch.pageX - thisOffset.left);
+    this.set('_touchOffsetY', touch.pageY - thisOffset.top);
+
     return true;
   },
 
@@ -264,8 +280,8 @@ export default Ember.Component.extend({
     this._moveDragGhost({
       clientX: touch.clientX,
       clientY: touch.clientY,
-      offsetX: touch.offsetX,
-      offsetY: touch.offsetY
+      offsetX: this.get('_touchOffsetX'),
+      offsetY: this.get('_touchOffsetY')
     });
 
     return true;
@@ -299,7 +315,10 @@ export default Ember.Component.extend({
       return false;
     }
 
+    this.set('_touchOffsetX', null);
+    this.set('_touchOffsetY', null);
     this.set('$dragOverElem', null);
+
     if (this.get('isDragging')) {
       this.send('dragEnd', evt);
     }
