@@ -201,6 +201,7 @@ export default Ember.Component.extend({
   },
 
   /* BEGIN TOUCH EVENTS **************/
+  // TODO(kapil) add a delay before the element is considered "dragging"
   touchStart(evt) {
     if (!this.get('shouldHandleTouch')) {
       return false;
@@ -217,6 +218,12 @@ export default Ember.Component.extend({
     }
 
     evt = this._maybeOriginalEvent(evt);
+    const touch = this._maybeTouchEvent(evt);
+    if (touch === evt) {
+      // there's something weird going on with this event, because
+      // touch should now be different than evt
+      return false;
+    }
 
     if (!this.get('isDragging')) {
       this.send('dragStart', evt);
@@ -228,25 +235,37 @@ export default Ember.Component.extend({
      * Simulate the drop events (dragEnter dragOver dragLeave)
      * on elements that we are moving over
      */
-    const touch = evt.touches && evt.touches[0];
-    if (touch) {
-      const $dragOverElem = Ember.$(document.elementFromPoint(
-        touch.clientX,
-        touch.clientY
-      ));
-      const $prevDragOverElem = this.get('$dragOverElem');
-      this.set('$dragOverElem', $dragOverElem);
+    // makes sure this isn't the element we're dragging over
+    this._tempToggleDragGhost(false);
+    const $dragOverElem = Ember.$(document.elementFromPoint(
+      touch.clientX,
+      touch.clientY
+    ));
+    this._tempToggleDragGhost(true);
 
-      // simulate the drop events on the elements we are currently
-      // and were previously dragging over
-      if (!$dragOverElem.is($prevDragOverElem)) {
-        if ($prevDragOverElem) {
-          $prevDragOverElem.trigger('dragleave');
-        }
-        $dragOverElem.trigger('dragenter');
+    const $prevDragOverElem = this.get('$dragOverElem');
+    this.set('$dragOverElem', $dragOverElem);
+
+    // simulate the drop events on the elements we are currently
+    // and were previously dragging over
+    if (!$dragOverElem.is($prevDragOverElem)) {
+      if ($prevDragOverElem) {
+        $prevDragOverElem.trigger('dragleave');
       }
-      $dragOverElem.trigger('dragover');
+      $dragOverElem.trigger('dragenter');
     }
+    $dragOverElem.trigger('dragover');
+
+    /*
+     * (Not really a hack)
+     * Move the drag ghost
+     */
+    this._moveDragGhost({
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      offsetX: touch.offsetX,
+      offsetY: touch.offsetY
+    });
 
     return true;
   },
@@ -258,6 +277,10 @@ export default Ember.Component.extend({
 
     evt = this._maybeOriginalEvent(evt);
 
+    /*
+     * BEGIN TOUCH HACKS
+     * Simulate the drop event on the element that we are moving over
+     */
     const $dragOverElem = this.get('$dragOverElem');
     if ($dragOverElem) {
       // HACK ALERT: set the dragItemData on the drop target element
@@ -297,6 +320,14 @@ export default Ember.Component.extend({
   },
 
   _createDragGhost() {
+    // In case we already have a drag ghost, use that one
+    // If you want to create a new drag ghost, call _clearDragGhost()
+    // before calling this
+    const $existingDragGhost = this.get('$dragGhost');
+    if ($existingDragGhost) {
+      return $existingDragGhost;
+    }
+
     const $dragGhost = this.$('.drag-drop__drag-content')
       .clone()
       .addClass('drag-drop__drag-content--ghost')
@@ -310,8 +341,8 @@ export default Ember.Component.extend({
         position: 'absolute',
         top: 0,
         left: 0,
-        right: 0,
-        bottom: 0,
+        width: '100%',
+        height: '100%',
         'z-index': -1
       });
 
@@ -319,6 +350,33 @@ export default Ember.Component.extend({
 
     this.set('$dragGhost', $dragGhost);
     return $dragGhost;
+  },
+
+  // TODO if we can get this to work, then maybe we should use it
+  // even for regular drag and drop instead of the bad HTML5 ghost
+  _moveDragGhost({ clientX, clientY, offsetX = 0, offsetY = 0 }) {
+    const $dragGhost = this.get('$dragGhost');
+    if ($dragGhost) {
+      $dragGhost.css({
+        position: 'fixed',
+        top: `${clientY - offsetY}px`,
+        left: `${clientX - offsetX}px`,
+        width: '',
+        height: '',
+        'z-index': ''
+      });
+    }
+  },
+
+  _tempToggleDragGhost(shouldEnable) {
+    const $dragGhost = this.get('$dragGhost');
+    if ($dragGhost) {
+      if (shouldEnable) {
+        this.$().append($dragGhost);
+      } else {
+        $dragGhost.detach();
+      }
+    }
   },
 
   _clearDragGhost() {
