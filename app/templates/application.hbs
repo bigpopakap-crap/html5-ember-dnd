@@ -4,10 +4,14 @@
                      isSortable=true
                      itemSortKeyProperty="key"
                      parentSelector=".drag-drop-container"
+                     itemDragHandleSelector=".title"
                      itemClass="draggable"
                      shouldAnimate=true
                      as |item|}}
-        <div class="tile">{{item.text}}</div>
+        <div class="tile">
+            <div class="title">{{item.text}}</div>
+            <div class="body">{{item.subtext}}</div>
+        </div>
     {{/drag-drop/set}}
 </div>
 

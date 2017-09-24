@@ -5,9 +5,10 @@
      are relatively positioned in order to do its animations */
   position: relative;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
-.drag-drop__drag-content {
+.drag-drop--dragging .drag-drop__drag-content {
   overflow: hidden;
 }
 
@@ -49,8 +50,7 @@
 }
 
 /***** APPLICATION CSS ******/
-.draggable,
-.tile {
+.draggable {
   width: 68px;
   height: 56px;
 }
@@ -59,12 +59,12 @@
   display: inline-block;
   outline: solid 1px gray;
   margin: 8px;
-  padding: 8px;
+  /* padding: 8px; TEST: SHOULDN'T BREAK ANYTHING */
 }
 
 .draggable .drag-drop__drop-area {
   background: white;
-  outline: dashed 1px gray;
+  border: dashed 1px gray;
 }
 
 .draggable.drag-drop--hovered {
@@ -82,4 +82,16 @@
 
 .tile {
   font-size: 12pt;
+}
+
+.tile .title {
+  padding: 4px;
+  background: #DDDDDD;
+  border-bottom: solid 1px #CCCCCC;
+
+  cursor: move;
+}
+
+.tile .body {
+  padding: 4px;
 }
