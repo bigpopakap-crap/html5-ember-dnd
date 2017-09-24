@@ -52,10 +52,12 @@ export default Ember.Component.extend({
     },
 
     mouseDown(evt) {
+      this.set('isHovered', false);
       this.set('dragTarget', evt.target);
     },
 
     mouseUp() {
+      this.set('isHovered', true);
       this.set('dragTarget', null);
     },
 
@@ -201,7 +203,6 @@ export default Ember.Component.extend({
   },
 
   /* BEGIN TOUCH EVENTS **************/
-  // TODO(kapil) add a delay before the element is considered "dragging"
   touchStart(evt) {
     if (!this.get('shouldHandleTouch')) {
       return false;
@@ -331,6 +332,7 @@ export default Ember.Component.extend({
     const $dragGhost = this.$('.drag-drop__drag-content')
       .clone()
       .addClass('drag-drop__drag-content--ghost')
+      .addClass(this.get('class'))
       .css({
         // Create a clone with the right dimensions, hide it behind the drop area with z-index: -1
         // display:none the original element via CSS
@@ -343,6 +345,7 @@ export default Ember.Component.extend({
         left: 0,
         width: '100%',
         height: '100%',
+        margin: 0,
         'z-index': -1
       });
 

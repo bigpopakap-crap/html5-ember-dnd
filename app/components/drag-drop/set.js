@@ -257,7 +257,6 @@ export default Ember.Component.extend({
           this._droppedItemKey = dropItemKey;
 
           const { previousItemKeys, currentItemKeys } = this._sortItems(draggedItemKey, dropItemKey);
-          // TODO(kapil) figure out why this has a problem when dragging back and forth over one item
           this.sendAction('afterDragOver', { draggedItemKey, dropItemKey });
 
           if (this.get('shouldAnimate')) {
