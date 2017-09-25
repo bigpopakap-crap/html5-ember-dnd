@@ -5,6 +5,7 @@
      are relatively positioned in order to do its animations */
   position: relative;
   box-sizing: border-box;
+  touch-action: none;
 }
 
 .drag-drop__drag-content {
