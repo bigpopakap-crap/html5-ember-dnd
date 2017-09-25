@@ -55,6 +55,17 @@
 }
 
 /***** APPLICATION CSS ******/
+h1,
+h2 {
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.example {
+  border: solid 1px #DDDDDD;
+  margin-bottom: 24px;
+}
+
 .draggable {
   width: 68px;
   height: 56px;
@@ -99,7 +110,9 @@
   padding: 4px;
   background: #DDDDDD;
   border-bottom: solid 1px #CCCCCC;
+}
 
+.drag-drop--draggable .tile .title {
   cursor: move;
 }
 

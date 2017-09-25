@@ -1,0 +1,38 @@
+<h1>Insertion Set</h1>
+<div class="toggles">
+    <div class="input-group">
+        {{input type="checkbox" checked=isSortable}}
+        <label>Enable sort</label>
+    </div>
+
+    <div class="input-group">
+        {{input type="checkbox" checked=resetAfterDropOutside}}
+        <label>Reset after drop outside</label>
+    </div>
+
+    <div class="input-group">
+        {{input type="checkbox" checked=shouldAnimate}}
+        <label>Animations</label>
+    </div>
+</div>
+<div class="insertion-list-container">
+    {{#drag-drop/insertion-set items
+                               isSortable=isSortable
+                               resetAfterDropOutside=resetAfterDropOutside
+                               itemSortKeyProperty="key"
+                               parentSelector=".insertion-list-container"
+                               itemDragHandleSelector=".title"
+                               itemClass="draggable"
+                               shouldAnimate=shouldAnimate
+                               as |item|}}
+        {{drag-tile title=item.text
+                    body=item.subtext}}
+    {{/drag-drop/insertion-set}}
+</div>
+
+<h2>View Data</h2>
+<div>
+    {{#each items as |item|}}
+        <span>{{item.key}}</span>
+    {{/each}}
+</div>

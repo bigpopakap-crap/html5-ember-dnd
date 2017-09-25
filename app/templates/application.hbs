@@ -1,24 +1,3 @@
-<div>Interact</div>
-<div class="drag-drop-container">
-    {{#drag-drop/set items
-                     isSortable=true
-                     resetAfterDropOutside=true
-                     itemSortKeyProperty="key"
-                     parentSelector=".drag-drop-container"
-                     itemDragHandleSelector=".title"
-                     itemClass="draggable"
-                     shouldAnimate=true
-                     as |item|}}
-        <div class="tile">
-            <div class="title">{{item.text}}</div>
-            <div class="body">{{item.subtext}}</div>
-        </div>
-    {{/drag-drop/set}}
-</div>
-
-<div>View Data</div>
-<div>
-    {{#each items as |item|}}
-        <span>{{item.key}}</span>
-    {{/each}}
-</div>
+{{examples/insertion-set class="example"}}
+{{examples/swap-set class="example"}}
+{{!TODO add an example of a custom sort function}}
