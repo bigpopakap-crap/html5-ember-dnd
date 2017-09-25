@@ -209,37 +209,6 @@ export default Ember.Component.extend({
       .filter(sortableItem => !Ember.isNone(sortableItem.get('sortKey')));
   }),
 
-  _getItemIndexByKey(itemSortKey) {
-    const sortableItems = this.get('_sortableItems');
-    return sortableItems.indexOf(sortableItems.findBy('sortKey', itemSortKey));
-  },
-
-  /**
-   * @param {any} dragKey which item was dragged
-   * @param {any} dropKey which item it is being dragged over
-   * @returns {{previousItemKeys, currentItemKeys}} the previous sort order
-   *          and the current sort order (after reordering)
-   */
-  _sortItems(dragKey, dropKey) {
-    const previousItemKeys = this.get('_sortableItems').mapBy('sortKey');
-
-    const dragIndex = this._getItemIndexByKey(dragKey);
-    const dropIndex = this._getItemIndexByKey(dropKey);
-
-    // Use Ember's special mutation functions so the property
-    // is updated and the template re-renders
-    // See http://emberjs.com/api/classes/Ember.MutableArray.html
-    const items = this.get('items');
-    const draggedItem = items[dragIndex];
-    items.removeAt(dragIndex, 1);
-    items.replace(dropIndex, 0, [draggedItem]);
-
-    return {
-      previousItemKeys,
-      currentItemKeys: this.get('_sortableItems').mapBy('sortKey')
-    };
-  },
-
   actions: {
     onDragStart({ dragData: draggedItemKey }) {
       // remember which widget we are currently dragging
@@ -256,12 +225,12 @@ export default Ember.Component.extend({
         if (draggedItemKey !== dropItemKey) {
           this._droppedItemKey = dropItemKey;
 
-          const { previousItemKeys, currentItemKeys } = this._sortItems(draggedItemKey, dropItemKey);
+          const previousItemKeys = this._getItemKeys();
+          this._sortItems(draggedItemKey, dropItemKey);
           this.sendAction('afterDragOver', { draggedItemKey, dropItemKey });
 
           if (this.get('shouldAnimate')) {
-            const $scope = Ember.$(this.get('parentSelector'));
-            animateDrag($scope, previousItemKeys, currentItemKeys);
+            this._animate(previousItemKeys);
           }
         } else if (this._droppedItemKey === null) {
           // we do this in case an item is dropped on itself
@@ -292,13 +261,11 @@ export default Ember.Component.extend({
 
     onDragEnd() {
       if (this.get('resetAfterDropOutside') && !this._dropSucceeded) {
-        const previousItemKeys = this.get('_sortableItems').mapBy('sortKey');
+        const previousItemKeys = this._getItemKeys();
         this.set('items', this._originalItems);
 
         if (this.get('shouldAnimate')) {
-          const $scope = Ember.$(this.get('parentSelector'));
-          const currentItemKeys = this.get('_sortableItems').mapBy('sortKey');
-          animateDrag($scope, previousItemKeys, currentItemKeys);
+          this._animate(previousItemKeys);
         }
       }
 
@@ -308,6 +275,35 @@ export default Ember.Component.extend({
       this._originalItems = null;
       this.set('_currentDraggedItemKey', null);
     }
+  },
+
+  /* BEGIN HELPERS **************************/
+  _getItemIndexByKey(itemSortKey) {
+    const sortableItems = this.get('_sortableItems');
+    return sortableItems.indexOf(sortableItems.findBy('sortKey', itemSortKey));
+  },
+
+  _getItemKeys() {
+    return this.get('_sortableItems').mapBy('sortKey');
+  },
+
+  _sortItems(dragKey, dropKey) {
+    const dragIndex = this._getItemIndexByKey(dragKey);
+    const dropIndex = this._getItemIndexByKey(dropKey);
+
+    // Use Ember's special mutation functions so the property
+    // is updated and the template re-renders
+    // See http://emberjs.com/api/classes/Ember.MutableArray.html
+    const items = this.get('items');
+    const draggedItem = items[dragIndex];
+    items.removeAt(dragIndex, 1);
+    items.replace(dropIndex, 0, [draggedItem]);
+  },
+
+  _animate(previousItemKeys) {
+    const $scope = Ember.$(this.get('parentSelector'));
+    const currentItemKeys = this._getItemKeys();
+    animateDrag($scope, previousItemKeys, currentItemKeys);
   }
 }).reopenClass({
   positionalParams: ['items']
