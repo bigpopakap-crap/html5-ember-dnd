@@ -1,8 +1,28 @@
 import Ember from 'ember';
 
+const KEY_DRAG_DIRECTION = {
+  UP:     { dx:  0, dy: -1 },
+  RIGHT:  { dx:  1, dy:  0 },
+  DOWN:   { dx:  0, dy:  1 },
+  LEFT:   { dx: -1, dy:  0 }
+};
+
+export function findDragDropElements($scope) {
+  const $elems = $scope.find('.drag-drop');
+
+  return {
+    all() {
+      return $elems;
+    },
+
+    byData(data) {
+      return $elems.filter(`[data-drag-drop-data="${data}"]`);
+    }
+  };
+}
+
 // IE11 and Edge only support "text"
 const DATA_TRANSFER_TYPE = 'text';
-
 const TOUCH_DATA_TRANSFER_KEY = 'dragDrop_component_dragData';
 
 export default Ember.Component.extend({
@@ -13,6 +33,7 @@ export default Ember.Component.extend({
   dragHandleSelector: null, // (optional) a CSS selector of the part of this element from
  														// where a drag can be initiated
   shouldHandleTouch: true,
+  tabIndex: 0,
 
   // SHOULD PROBABLY BE PRIVATE
   dragEffectAllowed: 'all', // HTML5 drag property that tells the drop area which kinds of actions
@@ -22,10 +43,13 @@ export default Ember.Component.extend({
 
   // PRIVATE
   isMouseDown: false,
+  isSpaceKeyTyped: false,
   isHovered: false, // can't use :hover because of a webkit bug with :hover being overly persistent
  										// with drag and drop: http://stackoverflow.com/questions/17946886/hover-sticks-to-element-on-drag-and-drop
   isPressed: Ember.computed.and('isMouseDown', 'notIsDragHandlePressed'),
-  isGrabbed: Ember.computed.and('isMouseDown', 'isDragHandlePressed'),
+  isGrabbedByMouse: Ember.computed.and('isMouseDown', 'isDragHandlePressed'),
+  isGrabbedByKey: Ember.computed.and('isSpaceKeyTyped', 'isFocused'),
+  isGrabbed: Ember.computed.or('isGrabbedByMouse', 'isGrabbedByKey'),
   isDragging: false,
   isDraggedOver: false,
   dragTarget: null, // the target element of the drag (which part of the element the mouse is on)
@@ -47,6 +71,7 @@ export default Ember.Component.extend({
 
   classNames: ['drag-drop'],
   classNameBindings: [
+    'isFocused:drag-drop--focused',
     'isHovered:drag-drop--hovered',
     'isPressed:drag-drop--pressed',
     'isGrabbed:drag-drop--grabbed',
@@ -56,7 +81,12 @@ export default Ember.Component.extend({
     'isDraggedOver:drag-drop--dragged-over'
   ],
 
-  attributeBindings: ['data:data-drag-drop-data'],
+  attributeBindings: [
+    'data:data-drag-drop-data',
+    'tabIndex:tabindex',
+    'isGrabbed:aria-grabbed',
+    'dropEffect:aria-dropeffect'
+  ],
 
   actions: {
     /* BEGIN REGULAR MOUSE EVENTS *******************/
@@ -349,6 +379,43 @@ export default Ember.Component.extend({
     return true;
   },
 
+  /* BEGIN KEYBOARD INPUT EVENTS *****/
+  focusIn() {
+    this.set('isFocused', true);
+  },
+
+  focusOut() {
+    this.set('isFocused', false);
+  },
+
+  keyDown(evt) {
+    console.log(evt.keyCode);
+    switch (evt.keyCode) {
+      case 32: //space
+        this.toggleProperty('isSpaceKeyTyped');
+        break;
+
+      case 37: //left
+        this._dragByKey(KEY_DRAG_DIRECTION.LEFT);
+        break;
+
+      case 38: //up
+        this._dragByKey(KEY_DRAG_DIRECTION.UP);
+        break;
+
+      case 39: //right
+        this._dragByKey(KEY_DRAG_DIRECTION.RIGHT);
+        break;
+
+      case 40: //down
+        this._dragByKey(KEY_DRAG_DIRECTION.DOWN);
+        break;
+
+      default:
+        //do nothing
+    }
+  },
+
   /* BEGIN HELPERS *******************/
   _createDragGhost() {
     // In case we already have a drag ghost, use that one
@@ -448,19 +515,9 @@ export default Ember.Component.extend({
       },
       extraParams
     );
+  },
+
+  _dragByKey(direction) {
+    // TODO find the nearest element (using findDragDropElements()) and simulate drag and dragOver, following touchMove, touchEnd and touchCancel
   }
 });
-
-export function findDragDropElements($scope) {
-  const $elems = $scope.find('.drag-drop');
-
-  return {
-    all() {
-      return $elems;
-    },
-
-    byData(data) {
-      return $elems.filter(`[data-drag-drop-data="${data}"]`);
-    }
-  };
-}

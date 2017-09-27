@@ -84,6 +84,7 @@ h2 {
   outline: dashed 1px gray;
 }
 
+.drag-drop--focused,
 .draggable.drag-drop--hovered,
 .draggable.drag-drop--pressed {
   outline-width: 2px;
