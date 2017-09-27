@@ -21,8 +21,11 @@ export default Ember.Component.extend({
   										// when an element is dropped on this element
 
   // PRIVATE
+  isMouseDown: false,
   isHovered: false, // can't use :hover because of a webkit bug with :hover being overly persistent
  										// with drag and drop: http://stackoverflow.com/questions/17946886/hover-sticks-to-element-on-drag-and-drop
+  isPressed: Ember.computed.and('isMouseDown', 'notIsDragHandlePressed'),
+  isGrabbed: Ember.computed.and('isMouseDown', 'isDragHandlePressed'),
   isDragging: false,
   isDraggedOver: false,
   dragTarget: null, // the target element of the drag (which part of the element the mouse is on)
@@ -30,10 +33,23 @@ export default Ember.Component.extend({
   $dragGhost: null, // the JQuery element that we are moving around with the drag
   									// we do this because HTML5 drag and drop doesn't do a good job with that
 
+  notIsDragHandlePressed: Ember.computed.not('isDragHandlePressed'),
+  isDragHandlePressed: Ember.computed('dragHandleSelector', 'dragTarget', function() {
+    const dragHandleSelector = this.get('dragHandleSelector');
+    if (!dragHandleSelector) {
+      return true; // we don't care where the drag was initiated
+    }
+
+    // make sure the drag was initiated by the specified drag handle
+    const dragTarget = this.get('dragTarget');
+    return Ember.$(dragTarget).is(dragHandleSelector);
+  }),
+
   classNames: ['drag-drop'],
   classNameBindings: [
     'isHovered:drag-drop--hovered',
     'isPressed:drag-drop--pressed',
+    'isGrabbed:drag-drop--grabbed',
     'isDraggable:drag-drop--draggable',
     'isDragging:drag-drop--dragging',
     'isDroppable:drag-drop--droppable',
@@ -48,26 +64,27 @@ export default Ember.Component.extend({
       this.set('isHovered', true);
     },
 
-    mouseLeave() {
-      this.set('isHovered', false);
-      this.set('isPressed', false);
-    },
-
     mouseDown(evt) {
       this.set('isHovered', false);
-      this.set('isPressed', true);
+      this.set('isMouseDown', true);
       this.set('dragTarget', evt.target);
     },
 
     mouseUp() {
       this.set('isHovered', true);
-      this.set('isPressed', false);
+      this.set('isMouseDown', false);
+      this.set('dragTarget', null);
+    },
+
+    mouseLeave() {
+      this.set('isHovered', false);
+      this.set('isMouseDown', false);
       this.set('dragTarget', null);
     },
 
     /* BEGIN DRAGGABLE EVENTS *******************/
     dragStart(evt) {
-      if (!this._shouldAllowDragStart()) {
+      if (!this.get('isGrabbed')) {
         return false;
       }
 
@@ -245,6 +262,11 @@ export default Ember.Component.extend({
     if (!this.get('isDragging')) {
       this.send('dragStart', evt);
     }
+    if (!this.get('isDragging')) {
+      // something failed in the drag start, so we shouldn't continue dragging
+      return false;
+    }
+
     this.send('drag', evt);
 
     /*
@@ -328,17 +350,6 @@ export default Ember.Component.extend({
   },
 
   /* BEGIN HELPERS *******************/
-  _shouldAllowDragStart() {
-    const dragHandleSelector = this.get('dragHandleSelector');
-    if (!dragHandleSelector) {
-      return true; // we don't care where the drag was initiated
-    }
-
-    // make sure the drag was initiated by the specified drag handle
-    const dragTarget = this.get('dragTarget');
-    return Ember.$(dragTarget).is(dragHandleSelector);
-  },
-
   _createDragGhost() {
     // In case we already have a drag ghost, use that one
     // If you want to create a new drag ghost, call _clearDragGhost()

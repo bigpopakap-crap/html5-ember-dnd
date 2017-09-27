@@ -93,6 +93,11 @@ h2 {
   outline-color: black;
 }
 
+.draggable.drag-drop--grabbed {
+  outline-color: #4444FF;
+  outline-width: 2px;
+}
+
 .draggable.drag-drop--dragging {
   outline: none;
 }
