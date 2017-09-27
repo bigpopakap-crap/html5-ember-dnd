@@ -240,27 +240,22 @@ export default Ember.Component.extend({
     },
 
     onDrop() {
-      const draggedItemKey = this.get('_currentDraggedItemKey');
-
       // protects against drags from outside the browser tab
       // Note: unlike the dragOver event, here we don't care about checking whether an element
       // is dragged over itself because that is actually expected. By the time we
       // get to onDrop, the element order has already changed and the dragged element
       // is actually being dropped on itself
+      const draggedItemKey = this.get('_currentDraggedItemKey');
       if (draggedItemKey) {
         this._dropSucceeded = true;
-
-        // no need to sort because the array has already been updated
-        this.sendAction('afterDrop', {
-          draggedItemKey,
-          dropItemKey: this._droppedItemKey // use the saved dropItem key because otherwise,
-                                            // it will look like we're dropping the item on itself
-        });
       }
     },
 
     onDragEnd() {
-      if (this.get('resetAfterDropOutside') && !this._dropSucceeded) {
+      const draggedItemKey = this.get('_currentDraggedItemKey');
+
+      const shouldResetOrder = this.get('resetAfterDropOutside') && !this._dropSucceeded;
+      if (shouldResetOrder) {
         const previousItemKeys = this._getItemKeys();
         this.set('items', this._originalItems);
 
@@ -268,6 +263,15 @@ export default Ember.Component.extend({
           this._animate(previousItemKeys);
         }
       }
+
+      // no need to sort because the array has already been updated
+      this.sendAction('afterDrop', {
+        wasSuccessful: this._dropSucceeded,
+        didResetOrder: shouldResetOrder,
+        draggedItemKey,
+        dropItemKey: this._droppedItemKey // use the saved dropItem key because otherwise,
+                                          // it will look like we're dropping the item on itself
+      });
 
       // forget all the state we were tracking
       this._droppedItemKey = null;
