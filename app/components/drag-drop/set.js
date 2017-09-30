@@ -199,6 +199,7 @@ export default Ember.Component.extend({
   															// outside the list of items?
 
   // PRIVATE
+  isGrabbed: false,     // tracks whether something in the list is grabbed
   _originalItems: null, // the original list of items stored
   											// during a drag, in case we need to revert
   _currentDraggedItemKey: null, // track which item is being dragged
@@ -225,6 +226,11 @@ export default Ember.Component.extend({
   }),
 
   actions: {
+    afterGrab() {
+      console.log('afterGrab');
+      this.set('isGrabbed', true);
+    },
+
     onDragStart({ dragData: draggedItemKey }) {
       // remember which widget we are currently dragging
       this.set('_currentDraggedItemKey', draggedItemKey);
@@ -293,6 +299,11 @@ export default Ember.Component.extend({
       this._dropSucceeded = null;
       this._originalItems = null;
       this.set('_currentDraggedItemKey', null);
+    },
+
+    afterRelease() {
+      console.log('afterRelease');
+      this.set('isGrabbed', false);
     }
   },
 

@@ -1,15 +1,18 @@
 {{#each _sortableItems key="sortKey" as |sortableItem|}}
     {{#drag-drop/item class=itemClass
-                 dragHandleSelector=itemDragHandleSelector
-                 enableDragging=enableSorting
-                 enableDropping=enableSorting
-                 enableTouch=enableTouch
-                 enableKeyboard=enableKeyboard
-                 data=sortableItem.sortKey
-                 onDragStart="onDragStart"
-                 onDragOver="onDragOver"
-                 onDrop="onDrop"
-                 onDragEnd="onDragEnd"}}
+                      data=sortableItem.sortKey
+                      dragHandleSelector=itemDragHandleSelector
+                      enableDragging=enableSorting
+                      enableDropping=enableSorting
+                      enableTouch=enableTouch
+                      enableKeyboard=enableKeyboard
+                      beReadyForDrop=isGrabbed
+                      afterGrab="afterGrab"
+                      onDragStart="onDragStart"
+                      onDragOver="onDragOver"
+                      onDrop="onDrop"
+                      onDragEnd="onDragEnd"
+                      afterRelease="afterRelease"}}
         {{yield sortableItem.content}}
     {{/drag-drop/item}}
 {{/each}}

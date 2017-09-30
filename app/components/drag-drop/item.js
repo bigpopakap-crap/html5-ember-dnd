@@ -34,6 +34,8 @@ export default Ember.Component.extend({
  														// where a drag can be initiated
   enableTouch: true,
   enableKeyboard: true,
+  beReadyForDrop: false, // flag to indicate that some item is being dragged that might be
+                         // dropped onto this item
   tabIndex: 0,
 
   // SHOULD PROBABLY BE PRIVATE
@@ -54,17 +56,28 @@ export default Ember.Component.extend({
   $dragGhost: null, // the JQuery element that we are moving around with the drag
   									// we do this because HTML5 drag and drop doesn't do a good job with that
 
-
   isPressed: Ember.computed.and('isMouseDown', 'notIsDragHandlePressed'),
   isGrabbedByMouse: Ember.computed.and('isMouseDown', 'isDragHandlePressed'),
   isGrabbedByKey: Ember.computed.and('isSpaceKeyTyped', 'isFocused'),
   isGrabbed: Ember.computed.or('isGrabbedByMouse', 'isGrabbedByKey'),
 
-  ariaGrabbed: Ember.computed('enableKeyboard', 'isGrabbed', function() {
-    return this.get('enableKeyboard') ? `${this.get('isGrabbed')}` : null;
+  isGrabChanged: Ember.observer('isGrabbed', function() {
+    if (this.get('isGrabbed')) {
+      this.sendAction('afterGrab', this.get('data'));
+    } else {
+      this.sendAction('afterRelease', this.get('data'));
+    }
   }),
-  ariaDropEffect: Ember.computed('enableKeyboard', 'dropEffect', function() {
-    return this.get('enableKeyboard') ? this.get('dropEffect') : null;
+
+  ariaGrabbed: Ember.computed('enableKeyboard', 'isGrabbed', function() {
+    return this.get('enableKeyboard')
+              ? `${this.get('isGrabbed')}`
+              : null;
+  }),
+  ariaDropEffect: Ember.computed('enableKeyboard', 'beReadyForDrop', 'dropEffect', function() {
+    return this.get('enableKeyboard') && this.get('beReadyForDrop')
+              ? this.get('dropEffect')
+              : null;
   }),
 
   notIsDragHandlePressed: Ember.computed.not('isDragHandlePressed'),
@@ -81,6 +94,7 @@ export default Ember.Component.extend({
 
   classNames: ['drag-drop'],
   classNameBindings: [
+    'beReadyForDrop:drag-drop--ready',
     'isFocused:drag-drop--focused',
     'isHovered:drag-drop--hovered',
     'isPressed:drag-drop--pressed',
