@@ -61,6 +61,7 @@ export default Ember.Component.extend({
   isGrabbedByKey: Ember.computed.and('isSpaceKeyTyped', 'isFocused'),
   isGrabbed: Ember.computed.or('isGrabbedByMouse', 'isGrabbedByKey'),
 
+  // TODO(kapil) this observer fires too many events. Need a better way to do this
   isGrabChanged: Ember.observer('isGrabbed', function() {
     if (this.get('isGrabbed')) {
       this.sendAction('afterGrab', this.get('data'));
