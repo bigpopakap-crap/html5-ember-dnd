@@ -7,7 +7,11 @@ const DragDropSortableListItem = Ember.ObjectProxy.extend({
   })
 });
 
-const animateDrag = (function() {
+const animateFnGenerator = function(animationOptions = {}) {
+  animationOptions = Ember.$.extend({}, {
+    duration: 'fast'
+  }, animationOptions);
+
   function animateDrag($scope, previousItemKeys, currentItemKeys) {
     // for the nice helper methods, make these Ember arrays
     previousItemKeys = Ember.makeArray(previousItemKeys);
@@ -170,13 +174,13 @@ const animateDrag = (function() {
 
     // then animate it back to its final resting place
     $itemToAnimate.animate(finalProperties, {
-      duration: 'fast',
+      duration: animationOptions.duration,
       complete: afterCompleteFn
     });
   }
 
   return animateDrag;
-})();
+};
 
 export default Ember.Component.extend({
   // PASSED IN
@@ -190,6 +194,7 @@ export default Ember.Component.extend({
   resetAfterDropOutside: false, // should we revert the order if the drop ends
   															// outside the list of items?
   shouldAnimate: false,
+  animationDuration: 'fast',
   shouldHandleTouch: true,
 
   // PRIVATE
@@ -200,6 +205,12 @@ export default Ember.Component.extend({
   										   // during the course of a drag
   _dropSucceeded: null, // indicates whether the drop actually ended on an item
   											// or outside the set of items (in case we need to revert)
+
+  animateDrag: Ember.computed('animationDuration', function() {
+    return animateFnGenerator({
+      duration: this.get('animationDuration')
+    });
+  }),
 
   tagName: '',
 
@@ -304,7 +315,7 @@ export default Ember.Component.extend({
   _animate(previousItemKeys) {
     const $scope = Ember.$(this.get('parentSelector'));
     const currentItemKeys = this._getItemKeys();
-    animateDrag($scope, previousItemKeys, currentItemKeys);
+    this.get('animateDrag')($scope, previousItemKeys, currentItemKeys);
   }
 }).reopenClass({
   positionalParams: ['items']
