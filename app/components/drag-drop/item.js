@@ -368,14 +368,17 @@ export default Ember.Component.extend({
      * BEGIN TOUCH HACKS
      * Simulate the drop event on the element that we are moving over
      */
-    // force recalculate everything with a touchMove(), and then use the cached $dragOverElem
-    this.touchMove(evt);
-    const $dragOverElem = this.get('$dragOverElem');
-    if ($dragOverElem) {
-      // HACK ALERT: set the dragItemData on the drop target element
-      // using JQuery data since we cannot pass it any other way
-      $dragOverElem.data(TOUCH_DATA_TRANSFER_KEY, this.get('data'));
-      $dragOverElem.trigger('drop');
+    // if we have actually started a drag, force recalculate everything
+    // with a touchMove(), and then use the cached $dragOverElem
+    if (this.get('isDragging')) {
+      this.touchMove(evt);
+      const $dragOverElem = this.get('$dragOverElem');
+      if ($dragOverElem) {
+        // HACK ALERT: set the dragItemData on the drop target element
+        // using JQuery data since we cannot pass it any other way
+        $dragOverElem.data(TOUCH_DATA_TRANSFER_KEY, this.get('data'));
+        $dragOverElem.trigger('drop');
+      }
     }
 
     this.touchCancel(evt);
