@@ -7,13 +7,13 @@
                       enableTouch=enableTouch
                       enableKeyboard=enableKeyboard
                       beReadyForDrop=isGrabbed
-                      afterGrab="afterGrab"
+                      afterGrab="onGrab"
                       onDragStart="onDragStart"
                       onDragOver="onDragOver"
                       onDrop="onDrop"
                       onDragCancel="onDragCancel"
                       onDragEnd="onDragEnd"
-                      afterRelease="afterRelease"}}
+                      afterRelease="onRelease"}}
         {{yield sortableItem.content}}
     {{/drag-drop/item}}
 {{/each}}

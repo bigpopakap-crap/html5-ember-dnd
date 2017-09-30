@@ -1,6 +1,14 @@
 import Ember from 'ember';
 import { findDragDropElements } from './item';
 
+const generateId = (function() {
+  let counter = 0;
+
+  return function() {
+    return `element${counter++}`;
+  };
+})();
+
 const DragDropSortableListItem = Ember.ObjectProxy.extend({
   sortKey: Ember.computed('sortKeyProperty', function() {
     return this.get(this.get('sortKeyProperty'));
@@ -189,6 +197,10 @@ export default Ember.Component.extend({
   // PASSED IN
   parentSelector: 'body', // a CSS selector to the parent element, or something
   												// that will uniquely scope this component on the page
+  dropBoundsSelector: null, // a CSS selector to identify the area within which drops
+                            // are considered successful. If a drop occurs outside this
+                            // area, then it is reverted. If null, only drops on items
+                            // themselves will be considered successful
   sortProperty: null,
   enableSorting: false,
   enableAnimation: false,
@@ -198,14 +210,13 @@ export default Ember.Component.extend({
   itemClass: null,
   itemDragHandleSelector: null, // a CSS selector for the child element where a
   															// drag can be initiated
-  resetAfterDropOutside: false, // should we revert the order if the drop ends
-  															// outside the list of items?
   resetAfterDragCancel: true,   // Reset the order if the user explicitly cancels the
                                 // drag (ex. with the ESC key)
 
   // PRIVATE
   isGrabbed: false,     // tracks whether something in the list is grabbed
   isAnimating: false,
+  _generatedId: null,   // a hacky thing to generate a unique ID for each component
   _originalItems: null, // the original list of items stored
   											// during a drag, in case we need to revert
   _currentDraggedItemKey: null, // track which item is being dragged
@@ -231,8 +242,27 @@ export default Ember.Component.extend({
       .filter(sortableItem => !Ember.isNone(sortableItem.get('sortKey')));
   }),
 
+  didInsertElement() {
+    const elementId = generateId();
+    const dropBoundsSelector = this.get('dropBoundsSelector');
+
+    this.set('_generatedId', elementId);
+
+    Ember.$(dropBoundsSelector).on(`drop.${elementId}`, () => {
+      // TODO figure out why this doens't work on desktop with HTML5 drag/drop
+      // call onDrop() to maybe mark the drop as successful
+      this.send('onDrop');
+    });
+  },
+
+  willDestroyElement() {
+    const elementId = this.get('_generatedId');
+    const dropBoundsSelector = this.get('dropBoundsSelector');
+    Ember.$(dropBoundsSelector).off(`drop.${elementId}`);
+  },
+
   actions: {
-    afterGrab() {
+    onGrab() {
       this.set('isGrabbed', true);
     },
 
@@ -284,7 +314,7 @@ export default Ember.Component.extend({
     onDragEnd() {
       const draggedItemKey = this.get('_currentDraggedItemKey');
 
-      const shouldResetOrder = (this.get('resetAfterDropOutside') && !this._dropSucceeded)
+      const shouldResetOrder = !this._dropSucceeded
                             || (this.get('resetAfterCancel') && this._dragCancelled);
       if (shouldResetOrder) {
         this._resetOrder();
@@ -306,7 +336,7 @@ export default Ember.Component.extend({
       });
     },
 
-    afterRelease() {
+    onRelease() {
       this.set('isGrabbed', false);
     }
   },
