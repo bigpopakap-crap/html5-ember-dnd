@@ -28,12 +28,12 @@ const TOUCH_DATA_TRANSFER_KEY = 'dragDrop_component_dragData';
 export default Ember.Component.extend({
   // PASSED IN
   data: '', // REQUIRED - a string to pass along with the element
-  isDraggable: false, // use this flag to turn on/off dragging behavior
-  isDroppable: false, // use this flag to enable/disable this element as a drop target
+  enableDragging: false, // use this flag to turn on/off dragging behavior
+  enableDropping: false, // use this flag to enable/disable this element as a drop target
   dragHandleSelector: null, // (optional) a CSS selector of the part of this element from
  														// where a drag can be initiated
-  shouldHandleTouch: true,
-  shouldHandleKeyboard: true,
+  enableTouch: true,
+  enableKeyboard: true,
   tabIndex: 0,
 
   // SHOULD PROBABLY BE PRIVATE
@@ -60,11 +60,11 @@ export default Ember.Component.extend({
   isGrabbedByKey: Ember.computed.and('isSpaceKeyTyped', 'isFocused'),
   isGrabbed: Ember.computed.or('isGrabbedByMouse', 'isGrabbedByKey'),
 
-  ariaGrabbed: Ember.computed('shouldHandleKeyboard', 'isGrabbed', function() {
-    return this.get('shouldHandleKeyboard') ? `${this.get('isGrabbed')}` : null;
+  ariaGrabbed: Ember.computed('enableKeyboard', 'isGrabbed', function() {
+    return this.get('enableKeyboard') ? `${this.get('isGrabbed')}` : null;
   }),
-  ariaDropEffect: Ember.computed('shouldHandleKeyboard', 'dropEffect', function() {
-    return this.get('shouldHandleKeyboard') ? this.get('dropEffect') : null;
+  ariaDropEffect: Ember.computed('enableKeyboard', 'dropEffect', function() {
+    return this.get('enableKeyboard') ? this.get('dropEffect') : null;
   }),
 
   notIsDragHandlePressed: Ember.computed.not('isDragHandlePressed'),
@@ -85,9 +85,9 @@ export default Ember.Component.extend({
     'isHovered:drag-drop--hovered',
     'isPressed:drag-drop--pressed',
     'isGrabbed:drag-drop--grabbed',
-    'isDraggable:drag-drop--draggable',
+    'enableDragging:drag-drop--draggable',
     'isDragging:drag-drop--dragging',
-    'isDroppable:drag-drop--droppable',
+    'enableDropping:drag-drop--droppable',
     'isDraggedOver:drag-drop--dragged-over'
   ],
 
@@ -190,7 +190,7 @@ export default Ember.Component.extend({
     drag-drop__drag-content div
    */
   dragEnter(evt) {
-    if (this.get('isDroppable')) {
+    if (this.get('enableDropping')) {
       this.set('isDraggedOver', true);
 
       // Touch events don't have dataTransfer
@@ -213,7 +213,7 @@ export default Ember.Component.extend({
   },
 
   dragOver(evt) {
-    if (this.get('isDroppable')) {
+    if (this.get('enableDropping')) {
       this.sendAction(
         'onDragOver',
         this._eventData(evt, {
@@ -229,7 +229,7 @@ export default Ember.Component.extend({
   },
 
   dragLeave(evt) {
-    if (this.get('isDroppable')) {
+    if (this.get('enableDropping')) {
       this.set('isDraggedOver', false);
 
       this.sendAction(
@@ -243,7 +243,7 @@ export default Ember.Component.extend({
   },
 
   drop(evt) {
-    if (this.get('isDroppable')) {
+    if (this.get('enableDropping')) {
       evt = this._maybeOriginalEvent(evt);
 
       this.set('isDraggedOver', false);
@@ -268,7 +268,7 @@ export default Ember.Component.extend({
 
   /* BEGIN TOUCH EVENTS **************/
   touchStart(evt) {
-    if (!this.get('shouldHandleTouch')) {
+    if (!this.get('enableTouch')) {
       return false;
     }
 
@@ -290,7 +290,7 @@ export default Ember.Component.extend({
   },
 
   touchMove(evt) {
-    if (!this.get('shouldHandleTouch')) {
+    if (!this.get('enableTouch')) {
       return false;
     }
 
@@ -346,7 +346,7 @@ export default Ember.Component.extend({
   },
 
   touchEnd(evt) {
-    if (!this.get('shouldHandleTouch')) {
+    if (!this.get('enableTouch')) {
       return false;
     }
 
@@ -369,7 +369,7 @@ export default Ember.Component.extend({
   },
 
   touchCancel(evt) {
-    if (!this.get('shouldHandleTouch')) {
+    if (!this.get('enableTouch')) {
       return false;
     }
 
@@ -395,7 +395,7 @@ export default Ember.Component.extend({
   },
 
   keyDown(evt) {
-    if (this.get('shouldHandleKeyboard')) {
+    if (this.get('enableKeyboard')) {
       switch (evt.keyCode) {
         case 32: //space
           this.toggleProperty('isSpaceKeyTyped');

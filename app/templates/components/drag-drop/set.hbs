@@ -1,10 +1,10 @@
 {{#each _sortableItems key="sortKey" as |sortableItem|}}
     {{#drag-drop/item class=itemClass
                  dragHandleSelector=itemDragHandleSelector
-                 isDraggable=isSortable
-                 isDroppable=isSortable
-                 shouldHandleTouch=shouldHandleTouch
-                 shouldHandleKeyboard=shouldHandleKeyboard
+                 enableDragging=enableSorting
+                 enableDropping=enableSorting
+                 enableTouch=enableTouch
+                 enableKeyboard=enableKeyboard
                  data=sortableItem.sortKey
                  onDragStart="onDragStart"
                  onDragOver="onDragOver"

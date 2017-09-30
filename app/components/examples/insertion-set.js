@@ -1,11 +1,11 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
-  isSortable: true,
+  enableSorting: true,
   resetAfterDropOutside: true,
-  shouldAnimate: true,
-  shouldHandleTouch: true,
-  shouldHandleKeyboard: true,
+  enableAnimation: true,
+  enableTouch: true,
+  enableKeyboard: true,
   animationDuration: 'fast',
 
   items: [

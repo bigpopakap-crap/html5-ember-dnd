@@ -186,17 +186,17 @@ export default Ember.Component.extend({
   // PASSED IN
   parentSelector: 'body', // a CSS selector to the parent element, or something
   												// that will uniquely scope this component on the page
-  isSortable: false,
-  itemSortKeyProperty: null,
+  sortProperty: null,
+  enableSorting: false,
+  enableAnimation: false,
+  enableTouch: true,
+  enableKeyboard: true,
+  animationDuration: 'fast',
   itemClass: null,
   itemDragHandleSelector: null, // a CSS selector for the child element where a
   															// drag can be initiated
   resetAfterDropOutside: false, // should we revert the order if the drop ends
   															// outside the list of items?
-  shouldAnimate: false,
-  animationDuration: 'fast',
-  shouldHandleTouch: true,
-  shouldHandleKeyboard: true,
 
   // PRIVATE
   _originalItems: null, // the original list of items stored
@@ -207,19 +207,19 @@ export default Ember.Component.extend({
   _dropSucceeded: null, // indicates whether the drop actually ended on an item
   											// or outside the set of items (in case we need to revert)
 
+  tagName: '',
+
   animateDrag: Ember.computed('animationDuration', function() {
     return animateFnGenerator({
       duration: this.get('animationDuration')
     });
   }),
 
-  tagName: '',
-
-  _sortableItems: Ember.computed('items.[]', 'itemSortKeyProperty', function() {
+  _sortableItems: Ember.computed('items.[]', 'sortProperty', function() {
     return this.get('items')
       .map(item => DragDropSortableListItem.create({
       	content: item,
-        sortKeyProperty: this.get('itemSortKeyProperty')
+        sortKeyProperty: this.get('sortProperty')
       }))
       .filter(sortableItem => !Ember.isNone(sortableItem.get('sortKey')));
   }),
@@ -244,7 +244,7 @@ export default Ember.Component.extend({
           this._sortItems(draggedItemKey, dropItemKey);
           this.sendAction('afterDragOver', { draggedItemKey, dropItemKey });
 
-          if (this.get('shouldAnimate')) {
+          if (this.get('enableAnimation')) {
             this._animate(previousItemKeys);
           }
         } else if (this._droppedItemKey === null) {
@@ -274,7 +274,7 @@ export default Ember.Component.extend({
         const previousItemKeys = this._getItemKeys();
         this.set('items', this._originalItems);
 
-        if (this.get('shouldAnimate')) {
+        if (this.get('enableAnimation')) {
           this._animate(previousItemKeys);
         }
       }
