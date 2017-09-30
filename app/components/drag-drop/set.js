@@ -196,6 +196,7 @@ export default Ember.Component.extend({
   shouldAnimate: false,
   animationDuration: 'fast',
   shouldHandleTouch: true,
+  shouldHandleKeyboard: true,
 
   // PRIVATE
   _originalItems: null, // the original list of items stored

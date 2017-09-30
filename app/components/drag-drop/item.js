@@ -47,16 +47,25 @@ export default Ember.Component.extend({
   isSpaceKeyTyped: false,
   isHovered: false, // can't use :hover because of a webkit bug with :hover being overly persistent
  										// with drag and drop: http://stackoverflow.com/questions/17946886/hover-sticks-to-element-on-drag-and-drop
-  isPressed: Ember.computed.and('isMouseDown', 'notIsDragHandlePressed'),
-  isGrabbedByMouse: Ember.computed.and('isMouseDown', 'isDragHandlePressed'),
-  isGrabbedByKey: Ember.computed.and('isSpaceKeyTyped', 'isFocused'),
-  isGrabbed: Ember.computed.or('isGrabbedByMouse', 'isGrabbedByKey'),
   isDragging: false,
   isDraggedOver: false,
   dragTarget: null, // the target element of the drag (which part of the element the mouse is on)
   $dragOverElem: null, // used for touch dragging, it's the element we are currently dragging over
   $dragGhost: null, // the JQuery element that we are moving around with the drag
   									// we do this because HTML5 drag and drop doesn't do a good job with that
+
+
+  isPressed: Ember.computed.and('isMouseDown', 'notIsDragHandlePressed'),
+  isGrabbedByMouse: Ember.computed.and('isMouseDown', 'isDragHandlePressed'),
+  isGrabbedByKey: Ember.computed.and('isSpaceKeyTyped', 'isFocused'),
+  isGrabbed: Ember.computed.or('isGrabbedByMouse', 'isGrabbedByKey'),
+
+  ariaGrabbed: Ember.computed('shouldHandleKeyboard', 'isGrabbed', function() {
+    return this.get('shouldHandleKeyboard') ? `${this.get('isGrabbed')}` : null;
+  }),
+  ariaDropEffect: Ember.computed('shouldHandleKeyboard', 'dropEffect', function() {
+    return this.get('shouldHandleKeyboard') ? this.get('dropEffect') : null;
+  }),
 
   notIsDragHandlePressed: Ember.computed.not('isDragHandlePressed'),
   isDragHandlePressed: Ember.computed('dragHandleSelector', 'dragTarget', function() {
@@ -85,8 +94,8 @@ export default Ember.Component.extend({
   attributeBindings: [
     'data:data-drag-drop-data',
     'tabIndex:tabindex',
-    'isGrabbed:aria-grabbed',
-    'dropEffect:aria-dropeffect'
+    'ariaGrabbed:aria-grabbed',
+    'ariaDropEffect:aria-dropeffect'
   ],
 
   actions: {
@@ -386,33 +395,31 @@ export default Ember.Component.extend({
   },
 
   keyDown(evt) {
-    if (!this.get('shouldHandleKeyboard')) {
-      return false;
-    }
+    if (this.get('shouldHandleKeyboard')) {
+      switch (evt.keyCode) {
+        case 32: //space
+          this.toggleProperty('isSpaceKeyTyped');
+          return false;
 
-    switch (evt.keyCode) {
-      case 32: //space
-        this.toggleProperty('isSpaceKeyTyped');
-        break;
+        case 37: //left
+          this._dragByKey(KEY_DRAG_DIRECTION.LEFT);
+          return false;
 
-      case 37: //left
-        this._dragByKey(KEY_DRAG_DIRECTION.LEFT);
-        break;
+        case 38: //up
+          this._dragByKey(KEY_DRAG_DIRECTION.UP);
+          return false;
 
-      case 38: //up
-        this._dragByKey(KEY_DRAG_DIRECTION.UP);
-        break;
+        case 39: //right
+          this._dragByKey(KEY_DRAG_DIRECTION.RIGHT);
+          return false;
 
-      case 39: //right
-        this._dragByKey(KEY_DRAG_DIRECTION.RIGHT);
-        break;
+        case 40: //down
+          this._dragByKey(KEY_DRAG_DIRECTION.DOWN);
+          return false;
 
-      case 40: //down
-        this._dragByKey(KEY_DRAG_DIRECTION.DOWN);
-        break;
-
-      default:
-        //do nothing
+        default:
+          //do nothing
+      }
     }
 
     return true;

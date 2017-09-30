@@ -4,6 +4,9 @@ export default Ember.Component.extend({
   isSortable: true,
   resetAfterDropOutside: true,
   shouldAnimate: true,
+  shouldHandleTouch: true,
+  shouldHandleKeyboard: true,
+  animationDuration: 'fast',
 
   items: [
     { key: 'A', text: 'Item A', subtext: 'blah blah blah blah' },

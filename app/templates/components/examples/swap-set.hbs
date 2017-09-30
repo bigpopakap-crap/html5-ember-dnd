@@ -14,6 +14,21 @@
         {{input type="checkbox" checked=shouldAnimate}}
         <label>Animations</label>
     </div>
+
+    <div class="input-group">
+        {{input type="checkbox" checked=shouldHandleTouch}}
+        <label>Touch enabled</label>
+    </div>
+
+    <div class="input-group">
+        {{input type="checkbox" checked=shouldHandleKeyboard}}
+        <label>Keyboard enabled</label>
+    </div>
+
+    <div class="input-group">
+        {{input type="text" value=animationDuration}}
+        <label>Animation speed ('fast', 'slow' or millis)</label>
+    </div>
 </div>
 <div class="swap-list-container">
     {{#drag-drop/swap-set items
@@ -24,6 +39,9 @@
                           itemDragHandleSelector=".title"
                           itemClass="draggable"
                           shouldAnimate=shouldAnimate
+                          animationDuration=animationDuration
+                          shouldHandleTouch=shouldHandleTouch
+                          shouldHandleKeyboard=shouldHandleKeyboard
                           as |item|}}
         {{drag-tile title=item.text
                     body=item.subtext}}
