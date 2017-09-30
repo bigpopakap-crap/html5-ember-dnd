@@ -33,6 +33,7 @@ export default Ember.Component.extend({
   dragHandleSelector: null, // (optional) a CSS selector of the part of this element from
  														// where a drag can be initiated
   shouldHandleTouch: true,
+  shouldHandleKeyboard: true,
   tabIndex: 0,
 
   // SHOULD PROBABLY BE PRIVATE
@@ -161,6 +162,9 @@ export default Ember.Component.extend({
       // isDragging to true in a next(). If we didn't do this,
       // then the two operations may run in the wrong order
       Ember.run.next(() => this.set('isDragging', false));
+
+      // Make sure that this item is not longer considered "grabbed"
+      this.send('mouseUp');
 
       this.sendAction(
         'onDragEnd',
@@ -304,14 +308,7 @@ export default Ember.Component.extend({
      * Simulate the drop events (dragEnter dragOver dragLeave)
      * on elements that we are moving over
      */
-    // makes sure this isn't the element we're dragging over
-    this._tempToggleDragGhost(false);
-    const $dragOverElem = Ember.$(document.elementFromPoint(
-      touch.clientX,
-      touch.clientY
-    ));
-    this._tempToggleDragGhost(true);
-
+    const $dragOverElem = this._getCurrentDragOverElem(touch.clientX, touch.clientY);
     const $prevDragOverElem = this.get('$dragOverElem');
     this.set('$dragOverElem', $dragOverElem);
 
@@ -344,12 +341,12 @@ export default Ember.Component.extend({
       return false;
     }
 
-    evt = this._maybeOriginalEvent(evt);
-
     /*
      * BEGIN TOUCH HACKS
      * Simulate the drop event on the element that we are moving over
      */
+    // force recalculate everything with a touchMove(), and then use the cached $dragOverElem
+    this.touchMove(evt);
     const $dragOverElem = this.get('$dragOverElem');
     if ($dragOverElem) {
       // HACK ALERT: set the dragItemData on the drop target element
@@ -389,7 +386,10 @@ export default Ember.Component.extend({
   },
 
   keyDown(evt) {
-    console.log(evt.keyCode);
+    if (!this.get('shouldHandleKeyboard')) {
+      return false;
+    }
+
     switch (evt.keyCode) {
       case 32: //space
         this.toggleProperty('isSpaceKeyTyped');
@@ -414,6 +414,8 @@ export default Ember.Component.extend({
       default:
         //do nothing
     }
+
+    return true;
   },
 
   /* BEGIN HELPERS *******************/
@@ -446,7 +448,7 @@ export default Ember.Component.extend({
         'z-index': -1
       });
 
-    this.$().append($dragGhost);
+    this._attachDragGhost($dragGhost);
 
     this.set('$dragGhost', $dragGhost);
     return $dragGhost;
@@ -468,14 +470,27 @@ export default Ember.Component.extend({
     }
   },
 
-  _tempToggleDragGhost(shouldEnable) {
+  _getCurrentDragOverElem(clientX, clientY) {
     const $dragGhost = this.get('$dragGhost');
+
+    // makes sure the drag ghost isn't in our way
     if ($dragGhost) {
-      if (shouldEnable) {
-        this.$().append($dragGhost);
-      } else {
-        $dragGhost.detach();
-      }
+      $dragGhost.detach();
+    }
+
+    const $dragOverElem = Ember.$(document.elementFromPoint(
+      clientX,
+      clientY
+    ));
+
+    this._attachDragGhost($dragGhost);
+
+    return $dragOverElem;
+  },
+
+  _attachDragGhost($dragGhost) {
+    if ($dragGhost) {
+      this.$().append($dragGhost);
     }
   },
 
@@ -493,7 +508,9 @@ export default Ember.Component.extend({
 
   _maybeTouchEvent(evt) {
     const orig = this._maybeOriginalEvent(evt);
-    return (orig.touches && orig.touches[0]) || orig;
+    return (orig.touches && orig.touches[0])
+        || (orig.changedTouches && orig.changedTouches[0])
+        || orig;
   },
 
   _eventData(evt, extraParams) {

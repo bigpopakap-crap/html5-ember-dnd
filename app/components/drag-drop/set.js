@@ -116,7 +116,9 @@ const animateDrag = (function() {
       .all()
       .css({
         // temporarily disable drag drop while the widgets are animating
-        pointerEvents: 'none'
+        // for some reason it has to be added here, not in the CSS for .drag-drop--during-animation
+        pointerEvents: 'none',
+        touchAction: 'none'
       })
       .addClass('drag-drop--during-animation')
       .stop(true, true); // finish any in-progress animations
@@ -131,6 +133,7 @@ const animateDrag = (function() {
       .all()
       .css({
         pointerEvents: '',
+        touchAction: '',
         top: '',
         left: ''
       })
