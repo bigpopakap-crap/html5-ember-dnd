@@ -80,13 +80,13 @@ export default Ember.Component.extend({
     }
   }),
 
-  ariaGrabbed: Ember.computed('enableKeyboard', 'isGrabbed', function() {
-    return this.get('enableKeyboard')
+  ariaGrabbed: Ember.computed('enableDragging', 'enableKeyboard', 'isGrabbed', function() {
+    return this.get('enableDragging') && this.get('enableKeyboard')
               ? `${this.get('isGrabbed')}`
               : null;
   }),
-  ariaDropEffect: Ember.computed('enableKeyboard', 'beReadyForDrop', 'dropEffect', function() {
-    return this.get('enableKeyboard') && this.get('beReadyForDrop')
+  ariaDropEffect: Ember.computed('enableDropping', 'enableKeyboard', 'beReadyForDrop', 'dropEffect', function() {
+    return this.get('enableDropping') && this.get('enableKeyboard') && this.get('beReadyForDrop')
               ? this.get('dropEffect')
               : null;
   }),
