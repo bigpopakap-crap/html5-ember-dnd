@@ -444,19 +444,35 @@ export default Ember.Component.extend({
           return false;
 
         case KEY_CODES.LEFT:
-          this._dragByKey(evt, KEY_DRAG_DIRECTION.LEFT);
+          if (this.get('isGrabbed')) {
+            this._dragByKey(evt, KEY_DRAG_DIRECTION.LEFT);
+          } else {
+            this._focusByKey(evt, KEY_DRAG_DIRECTION.LEFT);
+          }
           return false;
 
         case KEY_CODES.UP:
-          this._dragByKey(evt, KEY_DRAG_DIRECTION.UP);
+          if (this.get('isGrabbed')) {
+            this._dragByKey(evt, KEY_DRAG_DIRECTION.UP);
+          } else {
+            this._focusByKey(evt, KEY_DRAG_DIRECTION.UP);
+          }
           return false;
 
         case KEY_CODES.RIGHT:
-          this._dragByKey(evt, KEY_DRAG_DIRECTION.RIGHT);
+          if (this.get('isGrabbed')) {
+            this._dragByKey(evt, KEY_DRAG_DIRECTION.RIGHT);
+          } else {
+            this._focusByKey(evt, KEY_DRAG_DIRECTION.RIGHT);
+          }
           return false;
 
         case KEY_CODES.DOWN:
-          this._dragByKey(evt, KEY_DRAG_DIRECTION.DOWN);
+          if (this.get('isGrabbed')) {
+            this._dragByKey(evt, KEY_DRAG_DIRECTION.DOWN);
+          } else {
+            this._focusByKey(evt, KEY_DRAG_DIRECTION.DOWN);
+          }
           return false;
 
         default:
@@ -581,6 +597,14 @@ export default Ember.Component.extend({
       },
       extraParams
     );
+  },
+
+  _focusByKey(evt, direction) {
+    const $sortedTargets = this._dragByKeyTargets(direction);
+    const $target = $sortedTargets && $sortedTargets[0];
+    if ($target) {
+      Ember.run(() => $target.trigger('focus'));
+    }
   },
 
   _dragByKey(evt, direction) {
