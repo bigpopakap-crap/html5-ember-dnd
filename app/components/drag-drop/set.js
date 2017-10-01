@@ -214,6 +214,10 @@ export default Ember.Component.extend({
   _dropSucceeded: null, // indicates whether the drop actually ended on an item
   											// or outside the set of items (in case we need to revert)
 
+  notIsAnimating: Ember.computed.not('isAnimating'),
+  allowTouch: Ember.computed.and('enableTouch', 'notIsAnimating'),
+  allowKeyboard: Ember.computed.and('enableKeyboard', 'notIsAnimating'),
+
   tagName: '',
 
   animateDrag: Ember.computed('animationDuration', function() {
