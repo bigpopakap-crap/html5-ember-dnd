@@ -36,6 +36,16 @@ function dotP(x, y, a, b) {
   return x*a + y*b;
 }
 
+function makeArray(maybeArray) {
+  if (!maybeArray) {
+    return null;
+  } else if (typeof makeArray === 'string') {
+    return Ember.makeArray(maybeArray.split(','));
+  } else {
+    return Ember.makeArray(maybeArray);
+  }
+}
+
 // IE11 and Edge only support "text"
 const DATA_TRANSFER_TYPE = 'text';
 const TOUCH_DATA_TRANSFER_KEY = 'dragDrop_component_dragData';
@@ -43,6 +53,13 @@ const TOUCH_DATA_TRANSFER_KEY = 'dragDrop_component_dragData';
 export default Ember.Component.extend({
   // PASSED IN
   data: '', // REQUIRED - a string to pass along with the element
+  dragScope: null, // An array or comma-separated list that determines where this item can be dragged.
+                   // It can be dragged onto any element whose dropScope shares at least one keyword
+                   // null means it can be dragged anywhere
+                   // empty list or empty string means it can be dragged nowhere
+  dropScope: null, // Array or comma-separated list. See dragScope for more info
+                   // null means anything can be dragged onto this
+                   // empty list or empty string means nothing can be dragged onto this
   enableDragging: false, // use this flag to turn on/off dragging behavior
   enableDropping: false, // use this flag to enable/disable this element as a drop target
   dragHandleSelector: null, // (optional) a CSS selector of the part of this element from
@@ -113,6 +130,19 @@ export default Ember.Component.extend({
     return Ember.$(dragTarget).is(dragHandleSelector);
   }),
 
+  dragScopeAny: Ember.computed('dragScope', function() {
+    return this.get('dragScope') === null;
+  }),
+  dragScopeArray: Ember.computed('dragScope', function() {
+    return makeArray(this.get('dragScope'));
+  }),
+  dropScopeAny: Ember.computed('dropScope', function() {
+    return this.get('dropScope') === null;
+  }),
+  dropScopeArray: Ember.computed('dropScope', function() {
+    return makeArray(this.get('dropScope'));
+  }),
+
   classNames: ['drag-drop'],
   classNameBindings: [
     'beReadyForDrop:drag-drop--ready',
@@ -128,6 +158,8 @@ export default Ember.Component.extend({
 
   attributeBindings: [
     'data:data-drag-drop-data',
+    'dragScopeArray:data-drop-drop-drag-scope',
+    'dropScopeArray:data-drop-drop-drop-scope',
     'tabIndex:tabindex',
     'ariaGrabbed:aria-grabbed',
     'ariaDropEffect:aria-dropeffect'
