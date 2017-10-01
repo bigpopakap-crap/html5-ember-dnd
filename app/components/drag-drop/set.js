@@ -227,7 +227,6 @@ export default Ember.Component.extend({
 
   actions: {
     afterGrab() {
-      console.log('afterGrab');
       this.set('isGrabbed', true);
     },
 
@@ -302,7 +301,6 @@ export default Ember.Component.extend({
     },
 
     afterRelease() {
-      console.log('afterRelease');
       this.set('isGrabbed', false);
     }
   },

@@ -1,10 +1,19 @@
 import Ember from 'ember';
 
+const KEY_CODES = {
+  ENTER: 13,
+  SPACE: 32,
+  LEFT: 37,
+  UP: 38,
+  RIGHT: 39,
+  DOWN: 40
+};
+
 const KEY_DRAG_DIRECTION = {
-  UP:     { name: 'up',    firstSort: 'left', firstMult:  1, secondSort: 'top',  secondMult: -1 },
-  RIGHT:  { name: 'right', firstSort: 'top',  firstMult: -1, secondSort: 'left', secondMult:  1 },
-  DOWN:   { name: 'down',  firstSort: 'left', firstMult:  1, secondSort: 'top',  secondMult:  1 },
-  LEFT:   { name: 'left',  firstSort: 'top',  firstMult: -1, secondSort: 'left', secondMult: -1 }
+  UP:     { name: 'up',    firstSort: 'left', secondSort: 'top'  },
+  RIGHT:  { name: 'right', firstSort: 'top',  secondSort: 'left' },
+  DOWN:   { name: 'down',  firstSort: 'left', secondSort: 'top'  },
+  LEFT:   { name: 'left',  firstSort: 'top',  secondSort: 'left' }
 };
 
 export function findDragDropElements($scope) {
@@ -341,11 +350,11 @@ export default Ember.Component.extend({
     // and were previously dragging over
     if (!$dragOverElem.is($prevDragOverElem)) {
       if ($prevDragOverElem) {
-        $prevDragOverElem.trigger('dragleave');
+        Ember.run(() => $prevDragOverElem.trigger('dragleave'));
       }
-      $dragOverElem.trigger('dragenter');
+      Ember.run(() => $dragOverElem.trigger('dragenter'));
     }
-    $dragOverElem.trigger('dragover');
+    Ember.run(() => $dragOverElem.trigger('dragover'));
 
     /*
      * (Not really a hack)
@@ -378,8 +387,10 @@ export default Ember.Component.extend({
       if ($dragOverElem) {
         // HACK ALERT: set the dragItemData on the drop target element
         // using JQuery data since we cannot pass it any other way
-        $dragOverElem.data(TOUCH_DATA_TRANSFER_KEY, this.get('data'));
-        $dragOverElem.trigger('drop');
+        Ember.run(() => {
+          $dragOverElem.data(TOUCH_DATA_TRANSFER_KEY, this.get('data'));
+          $dragOverElem.trigger('drop');
+        });
       }
     }
 
@@ -414,7 +425,7 @@ export default Ember.Component.extend({
     // to clean up when we unfocus this element
   },
 
-  focusOut() {
+  focusOut(evt) {
     this.set('isFocused', false);
     this.set('isSpaceKeyTyped', false);
 
@@ -427,24 +438,25 @@ export default Ember.Component.extend({
   keyDown(evt) {
     if (this.get('enableKeyboard')) {
       switch (evt.keyCode) {
-        case 32: //space
+        case KEY_CODES.SPACE:
+        case KEY_CODES.ENTER:
           this.toggleProperty('isSpaceKeyTyped');
           return false;
 
-        case 37: //left
-          this._dragByKey(KEY_DRAG_DIRECTION.LEFT);
+        case KEY_CODES.LEFT:
+          this._dragByKey(evt, KEY_DRAG_DIRECTION.LEFT);
           return false;
 
-        case 38: //up
-          this._dragByKey(KEY_DRAG_DIRECTION.UP);
+        case KEY_CODES.UP:
+          this._dragByKey(evt, KEY_DRAG_DIRECTION.UP);
           return false;
 
-        case 39: //right
-          this._dragByKey(KEY_DRAG_DIRECTION.RIGHT);
+        case KEY_CODES.RIGHT:
+          this._dragByKey(evt, KEY_DRAG_DIRECTION.RIGHT);
           return false;
 
-        case 40: //down
-          this._dragByKey(KEY_DRAG_DIRECTION.DOWN);
+        case KEY_CODES.DOWN:
+          this._dragByKey(evt, KEY_DRAG_DIRECTION.DOWN);
           return false;
 
         default:
@@ -571,12 +583,24 @@ export default Ember.Component.extend({
     );
   },
 
-  _dragByKey(direction) {
+  _dragByKey(evt, direction) {
     const $sortedTargets = this._dragByKeyTargets(direction);
     const $target = $sortedTargets[0];
     if ($target) {
-      // TODO simulate drag and dragOver, following touchMove, touchEnd and touchCancel
-      console.log($target[0]);
+      this.send('dragStart', evt);
+      this.send('drag', evt);
+
+      Ember.run(() => $target.trigger('dragenter'));
+      Ember.run(() => $target.trigger('dragover'));
+      Ember.run(() => $target.trigger('drop'));
+
+      this.send('dragEnd', evt);
+
+      // re-grab the element so that the user can continue dragging
+      Ember.run(() => this.$().trigger('focus'));
+      this.keyDown({
+        keyCode: KEY_CODES.SPACE
+      });
     }
   },
 
@@ -601,9 +625,9 @@ export default Ember.Component.extend({
         const secondDeltaDelta = Math.abs(a.delta[direction.secondSort]) - Math.abs(b.delta[direction.secondSort]);
 
         if (firstDeltaDelta !== 0) {
-          return direction.firstMult * firstDeltaDelta;
+          return firstDeltaDelta;
         } else {
-          return direction.secondMult * secondDeltaDelta;
+          return secondDeltaDelta;
         }
       })
       .map(itemDetail => itemDetail.$item);
