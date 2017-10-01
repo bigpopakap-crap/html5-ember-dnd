@@ -13,31 +13,32 @@ const animateFnGenerator = function(animationOptions = {}) {
   }, animationOptions);
 
   function animateDrag($scope, previousItemKeys, currentItemKeys) {
-    // for the nice helper methods, make these Ember arrays
-    previousItemKeys = Ember.makeArray(previousItemKeys);
-    currentItemKeys = Ember.makeArray(currentItemKeys);
+    return new Ember.RSVP.Promise(resolve => {
+      // for the nice helper methods, make these Ember arrays
+      previousItemKeys = Ember.makeArray(previousItemKeys);
+      currentItemKeys = Ember.makeArray(currentItemKeys);
 
-    // Use 'afterRender' because that's when 3rd party DOM-manipulation
-    // libraries should execute
-    // See https://guides.emberjs.com/v1.10.0/understanding-ember/run-loop/#toc_what-happens-in-these-queues
-    Ember.run.scheduleOnce('afterRender', () => {
-      const elements = findDragDropElements($scope);
+      // Use 'afterRender' because that's when 3rd party DOM-manipulation
+      // libraries should execute
+      // See https://guides.emberjs.com/v1.10.0/understanding-ember/run-loop/#toc_what-happens-in-these-queues
+      Ember.run.scheduleOnce('afterRender', () => {
+        const elements = findDragDropElements($scope);
 
-      // We have to calculate where everything will move before starting the
-      // animation, or else things will be moving while we're trying to determine
-      // their position
-      const animations = _getAnimations(elements, previousItemKeys, currentItemKeys);
+        // We have to calculate where everything will move before starting the
+        // animation, or else things will be moving while we're trying to determine
+        // their position
+        const animations = _getAnimations(elements, previousItemKeys, currentItemKeys);
 
-      _beforeAnimating(elements, animations);
+        _beforeAnimating(elements, animations);
 
-      // Register an internal waiter when in testing, so we can wait for the animation to be done
-      let isDone = false;
-      Ember.Test && Ember.Test.registerWaiter(() => isDone);
-      // start an async run loop so that we can queue up the
-      // post-animation callback when all the animations are over
-      _executeAnimations(animations, () => {
-        _afterAnimating(elements);
-        isDone = true;
+        // Register an internal waiter when in testing, so we can wait for the animation to be done
+        let isDone = false;
+        Ember.Test && Ember.Test.registerWaiter(() => isDone);
+        _executeAnimations(animations, () => {
+          _afterAnimating(elements);
+          resolve();
+          isDone = true;
+        });
       });
     });
   }
@@ -202,6 +203,7 @@ export default Ember.Component.extend({
 
   // PRIVATE
   isGrabbed: false,     // tracks whether something in the list is grabbed
+  isAnimating: false,
   _originalItems: null, // the original list of items stored
   											// during a drag, in case we need to revert
   _currentDraggedItemKey: null, // track which item is being dragged
@@ -327,7 +329,11 @@ export default Ember.Component.extend({
   _animate(previousItemKeys) {
     const $scope = Ember.$(this.get('parentSelector'));
     const currentItemKeys = this._getItemKeys();
-    this.get('animateDrag')($scope, previousItemKeys, currentItemKeys);
+
+    this.set('isAnimating', true);
+    this.get('animateDrag')($scope, previousItemKeys, currentItemKeys).then(() => {
+      this.set('isAnimating', false);
+    });
   }
 }).reopenClass({
   positionalParams: ['items']
