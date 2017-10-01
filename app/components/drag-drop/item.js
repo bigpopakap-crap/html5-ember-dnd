@@ -1,13 +1,14 @@
 import Ember from 'ember';
 
 const KEY_DRAG_DIRECTION = {
-  UP:     { dx:  0, dy: -1 },
-  RIGHT:  { dx:  1, dy:  0 },
-  DOWN:   { dx:  0, dy:  1 },
-  LEFT:   { dx: -1, dy:  0 }
+  UP:     { name: 'up',    firstSort: 'left', firstMult:  1, secondSort: 'top',  secondMult: -1 },
+  RIGHT:  { name: 'right', firstSort: 'top',  firstMult: -1, secondSort: 'left', secondMult:  1 },
+  DOWN:   { name: 'down',  firstSort: 'left', firstMult:  1, secondSort: 'top',  secondMult:  1 },
+  LEFT:   { name: 'left',  firstSort: 'top',  firstMult: -1, secondSort: 'left', secondMult: -1 }
 };
 
 export function findDragDropElements($scope) {
+  $scope = $scope || Ember.$('body');
   const $elems = $scope.find('.drag-drop');
 
   return {
@@ -406,10 +407,21 @@ export default Ember.Component.extend({
   /* BEGIN KEYBOARD INPUT EVENTS *****/
   focusIn() {
     this.set('isFocused', true);
+    this.set('isSpaceKeyTyped', false);
+
+    // don't call mouseEnter() here even though we call mouseLeave() on focusOut()
+    // because we don't actually want to pretend the mouse is there, we just want
+    // to clean up when we unfocus this element
   },
 
   focusOut() {
     this.set('isFocused', false);
+    this.set('isSpaceKeyTyped', false);
+
+    // call this here even even though we don't call mouseEnter() on focusIn()
+    // because we just want this to do cleanup. In case someone clicks on an item
+    // and then tabs out to another item
+    this.send('mouseLeave');
   },
 
   keyDown(evt) {
@@ -560,6 +572,40 @@ export default Ember.Component.extend({
   },
 
   _dragByKey(direction) {
-    // TODO find the nearest element (using findDragDropElements()) and simulate drag and dragOver, following touchMove, touchEnd and touchCancel
+    const $sortedTargets = this._dragByKeyTargets(direction);
+    const $target = $sortedTargets[0];
+    if ($target) {
+      // TODO simulate drag and dragOver, following touchMove, touchEnd and touchCancel
+      console.log($target[0]);
+    }
+  },
+
+  _dragByKeyTargets(direction) {
+    const $this = this.$();
+    const thisPosition = $this.offset();
+
+    return findDragDropElements()
+      .all()
+      .toArray()
+      .map(item => Ember.$(item))
+      .filter($item => !$item.is($this))
+      .map($item => ({
+        $item,
+        delta: {
+          top: $item.offset().top - thisPosition.top,
+          left: $item.offset().left - thisPosition.left
+        }
+      }))
+      .sort((a, b) => {
+        const firstDeltaDelta = Math.abs(a.delta[direction.firstSort]) - Math.abs(b.delta[direction.firstSort]);
+        const secondDeltaDelta = Math.abs(a.delta[direction.secondSort]) - Math.abs(b.delta[direction.secondSort]);
+
+        if (firstDeltaDelta !== 0) {
+          return direction.firstMult * firstDeltaDelta;
+        } else {
+          return direction.secondMult * secondDeltaDelta;
+        }
+      })
+      .map(itemDetail => itemDetail.$item);
   }
 });
