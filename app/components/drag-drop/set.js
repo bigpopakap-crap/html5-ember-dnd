@@ -121,6 +121,8 @@ const animateFnGenerator = function(animationOptions = {}) {
       .css({
         // temporarily disable drag drop while the widgets are animating
         // for some reason it has to be added here, not in the CSS for .drag-drop--during-animation
+        // TODO(kapil) do this part: touch events and keyboard events are disabled by setting enableTouch=false and enableKeyboard=false
+        // while animations are happening
         pointerEvents: 'none',
         touchAction: 'none'
       })

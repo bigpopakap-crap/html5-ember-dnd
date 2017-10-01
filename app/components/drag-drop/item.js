@@ -10,10 +10,10 @@ const KEY_CODES = {
 };
 
 const KEY_DRAG_DIRECTION = {
-  UP:     { name: 'up',    firstSort: 'left', secondSort: 'top'  },
-  RIGHT:  { name: 'right', firstSort: 'top',  secondSort: 'left' },
-  DOWN:   { name: 'down',  firstSort: 'left', secondSort: 'top'  },
-  LEFT:   { name: 'left',  firstSort: 'top',  secondSort: 'left' }
+  UP:     { name: 'up',    dx:  0, dy: -1, perpDx: -1, perpDy:  0 },
+  RIGHT:  { name: 'right', dx:  1, dy:  0, perpDx:  0, perpDy:  1 },
+  DOWN:   { name: 'down',  dx:  0, dy:  1, perpDx:  1, perpDy:  0 },
+  LEFT:   { name: 'left',  dx: -1, dy:  0, perpDx:  0, perpDy: -1 }
 };
 
 export function findDragDropElements($scope) {
@@ -585,7 +585,7 @@ export default Ember.Component.extend({
 
   _dragByKey(evt, direction) {
     const $sortedTargets = this._dragByKeyTargets(direction);
-    const $target = $sortedTargets[0];
+    const $target = $sortedTargets && $sortedTargets[0];
     if ($target) {
       this.send('dragStart', evt);
       this.send('drag', evt);
@@ -613,23 +613,19 @@ export default Ember.Component.extend({
       .toArray()
       .map(item => Ember.$(item))
       .filter($item => !$item.is($this))
-      .map($item => ({
-        $item,
-        delta: {
-          top: $item.offset().top - thisPosition.top,
-          left: $item.offset().left - thisPosition.left
-        }
-      }))
-      .sort((a, b) => {
-        const firstDeltaDelta = Math.abs(a.delta[direction.firstSort]) - Math.abs(b.delta[direction.firstSort]);
-        const secondDeltaDelta = Math.abs(a.delta[direction.secondSort]) - Math.abs(b.delta[direction.secondSort]);
+      .map($item => {
+        const dx = $item.offset().left - thisPosition.left;
+        const dy = $item.offset().top - thisPosition.top;
 
-        if (firstDeltaDelta !== 0) {
-          return firstDeltaDelta;
-        } else {
-          return secondDeltaDelta;
-        }
+        const dotP = direction.dx * dx + direction.dy * dy;
+        const perpIndex = Math.abs(direction.perpDx * dx + direction.perpDy * dy);
+
+        // TODO(kapil) should we allow wrapping around? Ex. if you're at the end of a row
+        // and drag right, should you go to the next row?
+        return { $item, dotP, perpIndex };
       })
-      .map(itemDetail => itemDetail.$item);
+      .filter(({ dotP }) => dotP > 0)
+      .sortBy('dotP', 'perpIndex')
+      .map(({ $item }) => $item);
   }
 });
