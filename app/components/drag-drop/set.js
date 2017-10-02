@@ -200,6 +200,9 @@ export default Ember.Component.extend({
   															// drag can be initiated
   resetAfterDropOutside: false, // should we revert the order if the drop ends
   															// outside the list of items?
+                                // TODO(kapil) should this affect keyboard dragging?
+                                // ... right now it does, and it feels weird to hit
+                                // ... ESC and not have your items go back
 
   // PRIVATE
   isGrabbed: false,     // tracks whether something in the list is grabbed
