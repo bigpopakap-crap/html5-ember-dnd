@@ -1,6 +1,7 @@
 import Ember from 'ember';
 
 const KEY_CODES = {
+  ESC: 27,
   ENTER: 13,
   SPACE: 32,
   LEFT: 37,
@@ -10,10 +11,10 @@ const KEY_CODES = {
 };
 
 const KEY_DRAG_DIRECTION = {
-  UP:     { name: 'up',    dx:  0, dy: -1, perpDx: -1, perpDy:  0 },
-  RIGHT:  { name: 'right', dx:  1, dy:  0, perpDx:  0, perpDy:  1 },
-  DOWN:   { name: 'down',  dx:  0, dy:  1, perpDx:  1, perpDy:  0 },
-  LEFT:   { name: 'left',  dx: -1, dy:  0, perpDx:  0, perpDy: -1 }
+  UP:     { name: 'up',    minDim: 'height', dx:  0, dy: -1, perpDx: -1, perpDy:  0 },
+  RIGHT:  { name: 'right', minDim: 'width',  dx:  1, dy:  0, perpDx:  0, perpDy:  1 },
+  DOWN:   { name: 'down',  minDim: 'height', dx:  0, dy:  1, perpDx:  1, perpDy:  0 },
+  LEFT:   { name: 'left',  minDim: 'width',  dx: -1, dy:  0, perpDx:  0, perpDy: -1 }
 };
 
 export function findDragDropElements($scope) {
@@ -29,6 +30,10 @@ export function findDragDropElements($scope) {
       return $elems.filter(`[data-drag-drop-data="${data}"]`);
     }
   };
+}
+
+function dotP(x, y, a, b) {
+  return x*a + y*b;
 }
 
 // IE11 and Edge only support "text"
@@ -438,9 +443,21 @@ export default Ember.Component.extend({
   keyDown(evt) {
     if (this.get('enableKeyboard')) {
       switch (evt.keyCode) {
+        case KEY_CODES.ESC:
+          if (this.get('isDragging')) {
+            this._cancelDragByKey(evt);
+          } else {
+            this.set('isSpaceKeyTyped', false);
+          }
+          return false;
+
         case KEY_CODES.SPACE:
         case KEY_CODES.ENTER:
-          this.toggleProperty('isSpaceKeyTyped');
+          if (this.get('isDragging')) {
+            this._dropByKey(evt);
+          } else {
+            this.toggleProperty('isSpaceKeyTyped');
+          }
           return false;
 
         case KEY_CODES.LEFT:
@@ -609,18 +626,19 @@ export default Ember.Component.extend({
 
   _dragByKey(evt, direction) {
     const $sortedTargets = this._dragByKeyTargets(direction);
-    const $target = $sortedTargets && $sortedTargets[0];
-    if ($target) {
+    const $dragOverElem = $sortedTargets && $sortedTargets[0];
+    if ($dragOverElem) {
+      this.set('$dragOverElem', $dragOverElem);
+
       this.send('dragStart', evt);
       this.send('drag', evt);
 
-      Ember.run(() => $target.trigger('dragenter'));
-      Ember.run(() => $target.trigger('dragover'));
-      Ember.run(() => $target.trigger('drop'));
-
-      this.send('dragEnd', evt);
+      Ember.run(() => $dragOverElem.trigger('dragenter'));
+      Ember.run(() => $dragOverElem.trigger('dragover'));
 
       // re-grab the element so that the user can continue dragging
+      // TODO(kapil) figure out a way not to re-grab this thing, because
+      // this will cause too many "grab" events to fire
       Ember.run(() => this.$().trigger('focus'));
       this.keyDown({
         keyCode: KEY_CODES.SPACE
@@ -628,9 +646,30 @@ export default Ember.Component.extend({
     }
   },
 
+  _dropByKey(evt) {
+    const $dragOverElem = this.get('$dragOverElem');
+    if ($dragOverElem) {
+      Ember.run(() => $dragOverElem.trigger('drop'));
+    }
+    this._cancelDragByKey(evt);
+  },
+
+  _cancelDragByKey(evt) {
+    this.set('$dragOverElem', null);
+    this.send('dragEnd', evt);
+    this.set('isSpaceKeyTyped', false);
+  },
+
   _dragByKeyTargets(direction) {
     const $this = this.$();
     const thisPosition = $this.offset();
+    const minDot = (() => {
+      switch(direction.minDim) {
+        case 'width':  return $this.outerWidth();
+        case 'height': return $this.outerHeight();
+        default: return 0;
+      }
+    })();
 
     return findDragDropElements()
       .all()
@@ -641,15 +680,15 @@ export default Ember.Component.extend({
         const dx = $item.offset().left - thisPosition.left;
         const dy = $item.offset().top - thisPosition.top;
 
-        const dotP = direction.dx * dx + direction.dy * dy;
-        const perpIndex = Math.abs(direction.perpDx * dx + direction.perpDy * dy);
+        const dotProd = dotP(direction.dx, direction.dy, dx, dy);
+        const perpIndex = Math.abs(dotP(direction.perpDx, direction.perpDy, dx, dy));
 
         // TODO(kapil) should we allow wrapping around? Ex. if you're at the end of a row
         // and drag right, should you go to the next row?
-        return { $item, dotP, perpIndex };
+        return { $item, dotProd, perpIndex };
       })
-      .filter(({ dotP }) => dotP > 0)
-      .sortBy('dotP', 'perpIndex')
+      .filter(({ dotProd }) => dotProd > minDot)
+      .sortBy('dotProd', 'perpIndex')
       .map(({ $item }) => $item);
   }
 });
