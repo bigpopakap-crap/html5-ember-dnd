@@ -65,6 +65,7 @@ export default Ember.Component.extend({
   isHovered: false, // can't use :hover because of a webkit bug with :hover being overly persistent
  										// with drag and drop: http://stackoverflow.com/questions/17946886/hover-sticks-to-element-on-drag-and-drop
   isDragging: false,
+  isDraggingByKey: false,
   isDraggedOver: false,
   dragTarget: null, // the target element of the drag (which part of the element the mouse is on)
   $dragOverElem: null, // used for touch dragging, it's the element we are currently dragging over
@@ -75,6 +76,10 @@ export default Ember.Component.extend({
   isGrabbedByMouse: Ember.computed.and('isMouseDown', 'isDragHandlePressed'),
   isGrabbedByKey: Ember.computed.and('isSpaceKeyTyped', 'isFocused'),
   isGrabbed: Ember.computed.or('isGrabbedByMouse', 'isGrabbedByKey'),
+
+  // Don't apply the CSS for dragging if we're dragging using the keyboard
+  notIsDraggingByKey: Ember.computed.not('isDraggingByKey'),
+  isStyledAsDragging: Ember.computed.and('isDragging', 'notIsDraggingByKey'),
 
   // TODO(kapil) this observer fires too many events. Need a better way to do this
   isGrabChanged: Ember.observer('isGrabbed', function() {
@@ -116,7 +121,7 @@ export default Ember.Component.extend({
     'isPressed:drag-drop--pressed',
     'isGrabbed:drag-drop--grabbed',
     'enableDragging:drag-drop--draggable',
-    'isDragging:drag-drop--dragging',
+    'isStyledAsDragging:drag-drop--dragging',
     'enableDropping:drag-drop--droppable',
     'isDraggedOver:drag-drop--dragged-over'
   ],
@@ -632,6 +637,7 @@ export default Ember.Component.extend({
 
       if (!this.get('isDragging')) {
         this.send('dragStart', evt);
+        this.set('isDraggingByKey', true);
       }
       this.send('drag', evt);
 
@@ -657,6 +663,10 @@ export default Ember.Component.extend({
     this.set('$dragOverElem', null);
     this.send('dragEnd', evt);
     this.set('isSpaceKeyTyped', false);
+
+    // Ember.run.next so that there "isDragging" is definitely false
+    // before we set this to false
+    Ember.run.next(() => this.set('isDraggingByKey', false));
 
     // for whatever reason, we need to put this in the "afterRender" queue
     Ember.run.scheduleOnce('afterRender', () => this.$().trigger('focus'));
