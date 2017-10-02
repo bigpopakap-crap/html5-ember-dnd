@@ -630,7 +630,9 @@ export default Ember.Component.extend({
     if ($dragOverElem) {
       this.set('$dragOverElem', $dragOverElem);
 
-      this.send('dragStart', evt);
+      if (!this.get('isDragging')) {
+        this.send('dragStart', evt);
+      }
       this.send('drag', evt);
 
       Ember.run(() => $dragOverElem.trigger('dragenter'));
@@ -640,9 +642,8 @@ export default Ember.Component.extend({
       // TODO(kapil) figure out a way not to re-grab this thing, because
       // this will cause too many "grab" events to fire
       Ember.run(() => this.$().trigger('focus'));
-      this.keyDown({
-        keyCode: KEY_CODES.SPACE
-      });
+      // don't call keyDown() to do this, or it will drop the item
+      this.set('isSpaceKeyTyped', true);
     }
   },
 
@@ -658,6 +659,9 @@ export default Ember.Component.extend({
     this.set('$dragOverElem', null);
     this.send('dragEnd', evt);
     this.set('isSpaceKeyTyped', false);
+
+    // for whatever reason, we need to put this in the "afterRender" queue
+    Ember.run.scheduleOnce('afterRender', () => this.$().trigger('focus'));
   },
 
   _dragByKeyTargets(direction) {
