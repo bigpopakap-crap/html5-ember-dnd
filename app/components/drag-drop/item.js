@@ -656,12 +656,18 @@ export default Ember.Component.extend({
     if ($dragOverElem) {
       Ember.run(() => $dragOverElem.trigger('drop'));
     }
-    this._cancelDragByKey(evt);
+    this._endDragByKey(evt);
   },
 
   _cancelDragByKey(evt) {
-    this.set('$dragOverElem', null);
+    this.sendAction('onDragCancel', this.get('data'));
+    this._endDragByKey(evt);
+  },
+
+  _endDragByKey(evt) {
     this.send('dragEnd', evt);
+
+    this.set('$dragOverElem', null);
     this.set('isSpaceKeyTyped', false);
 
     // Ember.run.next so that there "isDragging" is definitely false

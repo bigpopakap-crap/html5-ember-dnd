@@ -200,9 +200,8 @@ export default Ember.Component.extend({
   															// drag can be initiated
   resetAfterDropOutside: false, // should we revert the order if the drop ends
   															// outside the list of items?
-                                // TODO(kapil) should this affect keyboard dragging?
-                                // ... right now it does, and it feels weird to hit
-                                // ... ESC and not have your items go back
+  resetAfterDragCancel: true,   // Reset the order if the user explicitly cancels the
+                                // drag (ex. with the ESC key)
 
   // PRIVATE
   isGrabbed: false,     // tracks whether something in the list is grabbed
@@ -278,33 +277,33 @@ export default Ember.Component.extend({
       }
     },
 
+    onDragCancel() {
+      this._dragCancelled = true;
+    },
+
     onDragEnd() {
       const draggedItemKey = this.get('_currentDraggedItemKey');
 
-      const shouldResetOrder = this.get('resetAfterDropOutside') && !this._dropSucceeded;
+      const shouldResetOrder = (this.get('resetAfterDropOutside') && !this._dropSucceeded)
+                            || (this.get('resetAfterCancel') && this._dragCancelled);
       if (shouldResetOrder) {
-        const previousItemKeys = this._getItemKeys();
-        this.set('items', this._originalItems);
-
-        if (this.get('enableAnimation')) {
-          this._animate(previousItemKeys);
-        }
+        this._resetOrder();
       }
-
-      // no need to sort because the array has already been updated
-      this.sendAction('afterDrop', {
-        wasSuccessful: this._dropSucceeded,
-        didResetOrder: shouldResetOrder,
-        draggedItemKey,
-        dropItemKey: this._droppedItemKey // use the saved dropItem key because otherwise,
-                                          // it will look like we're dropping the item on itself
-      });
 
       // forget all the state we were tracking
       this._droppedItemKey = null;
       this._dropSucceeded = null;
       this._originalItems = null;
       this.set('_currentDraggedItemKey', null);
+
+      const eventName = this._dragCancelled ? 'afterCancel' : 'afterDrop';
+      this.sendAction(eventName, {
+        wasSuccessful: this._dropSucceeded,
+        didResetOrder: shouldResetOrder,
+        draggedItemKey,
+        dropItemKey: this._droppedItemKey // use the saved dropItem key because otherwise,
+                                          // it will look like we're dropping the item on itself
+      });
     },
 
     afterRelease() {
@@ -327,6 +326,15 @@ export default Ember.Component.extend({
       draggedItemKey,
       dropItemKey
     });
+  },
+
+  _resetOrder() {
+    const previousItemKeys = this._getItemKeys();
+    this.set('items', this._originalItems);
+
+    if (this.get('enableAnimation')) {
+      this._animate(previousItemKeys);
+    }
   },
 
   _animate(previousItemKeys) {
