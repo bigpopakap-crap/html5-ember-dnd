@@ -1,4 +1,4 @@
-<h1>Insertion Set</h1>
+<h1>{{title}}</h1>
 <div class="toggles">
     <div class="input-group">
         {{input type="checkbox" checked=enableSorting}}
@@ -39,14 +39,20 @@
         {{input type="text" value=animationDuration}}
         <label>Animation speed ('fast', 'slow' or millis)</label>
     </div>
+
+    <div class="input-group">
+        {{input type="text" value=newItemText}}
+        <button {{action "createItemFirst"}}>Create first</button>
+        <button {{action "createItemLast"}}>Create last</button>
+    </div>
 </div>
-<div class="insertion-list-container">
-    {{#drag-drop/insertion-set items
+<div class="{{containerClass}}">
+    {{#component componentName items
                                enableSorting=enableSorting
                                resetAfterDropOutside=resetAfterDropOutside
                                resetAfterDragCancel=resetAfterDragCancel
                                sortProperty="key"
-                               parentSelector=".insertion-list-container"
+                               parentSelector=containerSelector
                                itemDragHandleSelector=".title"
                                itemClass="draggable"
                                enableAnimation=enableAnimation
@@ -54,9 +60,8 @@
                                enableTouch=enableTouch
                                enableKeyboard=enableKeyboard
                                as |item|}}
-        {{drag-tile title=item.text
-                    body=item.subtext}}
-    {{/drag-drop/insertion-set}}
+        {{drag-tile title=item.text body=item.subtext}}
+    {{/component}}
 </div>
 
 <h2>View Data</h2>
