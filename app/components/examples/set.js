@@ -15,7 +15,18 @@ export default Ember.Component.extend({
   enableAnimation: true,
   enableTouch: true,
   enableKeyboard: true,
-  animationDuration: 'fast',
+  animationDurationInput: 'fast',
+
+  animationDuration: Ember.computed('animationDurationInput', function() {
+    const input = this.get('animationDurationInput');
+    const num = +input;
+
+    if (isNaN(num)) {
+      return input || 'fast';
+    } else {
+      return num;
+    }
+  }),
 
   containerSelector: Ember.computed('containerClass', function() {
     return `.${this.get('containerClass')}`;
