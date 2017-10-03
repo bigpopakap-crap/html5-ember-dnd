@@ -436,6 +436,9 @@ export default Ember.Component.extend({
   },
 
   focusOut(evt) {
+    // TODO(kapil) if we're dragging when we lose focus, we need to
+    // end the drag (not as explicit cancel, but as a premature end)
+
     this.set('isFocused', false);
     this.set('isSpaceKeyTyped', false);
 

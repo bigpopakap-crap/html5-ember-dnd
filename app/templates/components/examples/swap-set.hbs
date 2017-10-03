@@ -11,6 +11,11 @@
     </div>
 
     <div class="input-group">
+        {{input type="checkbox" checked=resetAfterDragCancel}}
+        <label>Reset after cancel</label>
+    </div>
+
+    <div class="input-group">
         {{input type="checkbox" checked=enableAnimation}}
         <label>Animations</label>
     </div>
@@ -34,6 +39,7 @@
     {{#drag-drop/swap-set items
                           enableSorting=enableSorting
                           resetAfterDropOutside=resetAfterDropOutside
+                          resetAfterDragCancel=resetAfterDragCancel
                           sortProperty="key"
                           parentSelector=".swap-list-container"
                           itemDragHandleSelector=".title"

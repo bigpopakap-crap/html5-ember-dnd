@@ -211,6 +211,7 @@ export default Ember.Component.extend({
   _currentDraggedItemKey: null, // track which item is being dragged
   _droppedItemKey: null, // keeps track of the last item that was dragged over
   										   // during the course of a drag
+  _dragCancelled: null,
   _dropSucceeded: null, // indicates whether the drop actually ended on an item
   											// or outside the set of items (in case we need to revert)
 
@@ -240,6 +241,8 @@ export default Ember.Component.extend({
       // remember which widget we are currently dragging
       this.set('_currentDraggedItemKey', draggedItemKey);
       this._originalItems = this.get('items').slice();
+      this._dropSucceeded = false;
+      this._dragCancelled = false;
     },
 
     onDragOver({ dropData: dropItemKey }) {
@@ -284,26 +287,29 @@ export default Ember.Component.extend({
     onDragEnd() {
       const draggedItemKey = this.get('_currentDraggedItemKey');
 
-      const shouldResetOrder = (this.get('resetAfterDropOutside') && !this._dropSucceeded)
-                            || (this.get('resetAfterCancel') && this._dragCancelled);
+      // TODO(kapil) clean up this weird logic... it feels like we shouldn't
+      // treat these two things differently
+      const shouldResetOrder = (this.get('resetAfterDragCancel') && this._dragCancelled)
+                            || (this.get('resetAfterDropOutside') && !this._dragCancelled && !this._dropSucceeded);
       if (shouldResetOrder) {
         this._resetOrder();
       }
 
-      // forget all the state we were tracking
-      this._droppedItemKey = null;
-      this._dropSucceeded = null;
-      this._originalItems = null;
-      this.set('_currentDraggedItemKey', null);
-
       const eventName = this._dragCancelled ? 'afterCancel' : 'afterDrop';
       this.sendAction(eventName, {
-        wasSuccessful: this._dropSucceeded,
+        wasSuccessful: this._dragCancelled ? undefined : this._dropSucceeded,
         didResetOrder: shouldResetOrder,
         draggedItemKey,
         dropItemKey: this._droppedItemKey // use the saved dropItem key because otherwise,
                                           // it will look like we're dropping the item on itself
       });
+
+      // forget all the state we were tracking
+      this._dragCancelled = null;
+      this._droppedItemKey = null;
+      this._dropSucceeded = null;
+      this._originalItems = null;
+      this.set('_currentDraggedItemKey', null);
     },
 
     afterRelease() {

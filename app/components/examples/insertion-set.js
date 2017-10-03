@@ -3,6 +3,7 @@ import Ember from 'ember';
 export default Ember.Component.extend({
   enableSorting: true,
   resetAfterDropOutside: true,
+  resetAfterDragCancel: true,
   enableAnimation: true,
   enableTouch: true,
   enableKeyboard: true,
