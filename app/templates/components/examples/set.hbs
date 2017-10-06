@@ -6,6 +6,11 @@
     </div>
 
     <div class="input-group">
+        {{input type="checkbox" checked=enableDragHandle}}
+        <label>Drag only by gray bar</label>
+    </div>
+
+    <div class="input-group">
         {{input type="checkbox" checked=resetAfterDropOutside}}
         <label>Reset after drop outside</label>
     </div>
@@ -48,7 +53,7 @@
                                resetAfterDragCancel=resetAfterDragCancel
                                sortProperty="key"
                                parentSelector=containerSelector
-                               itemDragHandleSelector=".title"
+                               itemDragHandleSelector=itemDragHandleSelector
                                itemClass="draggable"
                                enableAnimation=enableAnimation
                                animationDuration=animationDuration

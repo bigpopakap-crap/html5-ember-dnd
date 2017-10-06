@@ -10,12 +10,17 @@ export default Ember.Component.extend({
   containerClass: null,
 
   enableSorting: true,
+  enableDragHandle: true,
   resetAfterDropOutside: true,
   resetAfterDragCancel: true,
   enableAnimation: true,
   enableTouch: true,
   enableKeyboard: true,
   animationDurationInput: 'fast',
+
+  itemDragHandleSelector: Ember.computed('enableDragHandle', function() {
+    return this.get('enableDragHandle') ? '.title' : null;
+  }),
 
   animationDuration: Ember.computed('animationDurationInput', function() {
     const input = this.get('animationDurationInput');
