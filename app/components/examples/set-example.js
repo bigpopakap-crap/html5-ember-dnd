@@ -5,9 +5,8 @@ function nextChar(c) {
 }
 
 export default Ember.Component.extend({
-  title: 'Generic Set Example',
-  componentName: null,
-  containerClass: null,
+  title: 'Single Set Example',
+  containerClass: 'single-set-example',
 
   enableSorting: true,
   enableDragHandle: true,
@@ -17,6 +16,10 @@ export default Ember.Component.extend({
   enableTouch: true,
   enableKeyboard: true,
   animationDurationInput: 'fast',
+
+  componentName: Ember.computed('useSwap', function() {
+    return this.get('useSwap') ? 'drag-drop/swap-set' : 'drag-drop/insertion-set';
+  }),
 
   itemDragHandleSelector: Ember.computed('enableDragHandle', function() {
     return this.get('enableDragHandle') ? '.title' : null;

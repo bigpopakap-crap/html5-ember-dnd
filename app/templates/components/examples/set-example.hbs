@@ -6,6 +6,11 @@
     </div>
 
     <div class="input-group">
+        {{input type="checkbox" checked=useSwap}}
+        <label>Swapping sort</label>
+    </div>
+
+    <div class="input-group">
         {{input type="checkbox" checked=enableDragHandle}}
         <label>Drag only by gray bar</label>
     </div>
@@ -60,7 +65,8 @@
                                enableTouch=enableTouch
                                enableKeyboard=enableKeyboard
                                as |item|}}
-        {{drag-tile title=item.text body=item.subtext}}
+        {{examples/drag-tile title=item.text
+                             body=item.subtext}}
     {{/component}}
 </div>
 
