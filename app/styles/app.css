@@ -24,10 +24,6 @@
   display: none;
 }
 
-.drag-drop--dragging .drag-drop__drag-content {
-  display: none;
-}
-
 .drag-drop--dragging .drag-drop__drop-area {
   display: block;
 }
