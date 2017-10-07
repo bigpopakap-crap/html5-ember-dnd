@@ -53,20 +53,22 @@
 </div>
 <div class="{{containerClass}}">
     {{#component componentName items
-                               enableSorting=enableSorting
+                               sortProperty="key"
                                resetAfterDropOutside=resetAfterDropOutside
                                resetAfterDragCancel=resetAfterDragCancel
-                               sortProperty="key"
                                parentSelector=containerSelector
-                               itemDragHandleSelector=itemDragHandleSelector
-                               itemClass="draggable"
                                enableAnimation=enableAnimation
                                animationDuration=animationDuration
                                enableTouch=enableTouch
                                enableKeyboard=enableKeyboard
-                               as |item|}}
-        {{examples/drag-tile title=item.text
-                             body=item.subtext}}
+                               as |dnd|}}
+        {{#dnd.cmp class="draggable"
+                   dragHandleSelector=itemDragHandleSelector
+                   enableDragging=enableSorting
+                   enableDropping=enableSorting}}
+            {{examples/drag-tile title=dnd.item.text
+                                 body=dnd.item.subtext}}
+        {{/dnd.cmp}}
     {{/component}}
 </div>
 

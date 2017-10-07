@@ -1,19 +1,18 @@
 {{#each _sortableItems key="sortKey" as |sortableItem|}}
-    {{#drag-drop/item class=itemClass
-                      dragHandleSelector=itemDragHandleSelector
-                      enableDragging=enableSorting
-                      enableDropping=enableSorting
-                      data=sortableItem.sortKey
-                      enableTouch=enableTouch
-                      enableKeyboard=enableKeyboard
-                      beReadyForDrop=isGrabbed
-                      afterGrab="afterGrab"
-                      onDragStart="onDragStart"
-                      onDragOver="onDragOver"
-                      onDrop="onDrop"
-                      onDragCancel="onDragCancel"
-                      onDragEnd="onDragEnd"
-                      afterRelease="afterRelease"}}
-        {{yield sortableItem.content}}
-    {{/drag-drop/item}}
+    {{yield (hash
+        cmp=(component "drag-drop/item"
+            data=sortableItem.sortKey
+            enableTouch=enableTouch
+            enableKeyboard=enableKeyboard
+            beReadyForDrop=isGrabbed
+            afterGrab=(action "afterGrab")
+            onDragStart=(action "onDragStart")
+            onDragOver=(action "onDragOver")
+            onDrop=(action "onDrop")
+            onDragCancel=(action "onDragCancel")
+            onDragEnd=(action "onDragEnd")
+            afterRelease=(action "afterRelease")
+        )
+        item=sortableItem.content
+    )}}
 {{/each}}

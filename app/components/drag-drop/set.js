@@ -190,14 +190,10 @@ export default Ember.Component.extend({
   parentSelector: 'body', // a CSS selector to the parent element, or something
   												// that will uniquely scope this component on the page
   sortProperty: null,
-  enableSorting: false,
   enableAnimation: false,
   enableTouch: true,
   enableKeyboard: true,
   animationDuration: 'fast',
-  itemClass: null,
-  itemDragHandleSelector: null, // a CSS selector for the child element where a
-  															// drag can be initiated
   resetAfterDropOutside: false, // should we revert the order if the drop ends
   															// outside the list of items?
   resetAfterDragCancel: true,   // Reset the order if the user explicitly cancels the
