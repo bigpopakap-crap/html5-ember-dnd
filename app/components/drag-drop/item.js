@@ -46,11 +46,9 @@ function makeArray(maybeArray) {
   }
 }
 
-// IE11 and Edge only support "text"
-const HTML5_DATA_TRANSFER_TYPE = 'text';
-const DATA_TRANSFER_KEY = 'dragDrop_component_dragData';
-
 export default Ember.Component.extend({
+  dataTransferService: Ember.inject.service('drag-drop/data-transfer'),
+
   // PASSED IN
   data: '', // REQUIRED - a string to pass along with the element
   dragScope: null, // An array or comma-separated list that determines where this item can be dragged.
@@ -212,9 +210,14 @@ export default Ember.Component.extend({
 
       const $dragGhost = this._createDragGhost(eventData);
 
-      // Touch events don't have dataTransfer
+      this.get('dataTransferService').setData({
+        dragData: this.get('data'),
+        dragScope: this.get('dragScope')
+      });
+
+      // If we're doing regular HTML5 drag and drop (not touch or keyboard),
+      // then do the HTML5 stuff
       if (evt.dataTransfer) {
-        evt.dataTransfer.setData(HTML5_DATA_TRANSFER_TYPE, this._makeDragDataAttr());
         evt.dataTransfer.effectAllowed = this.get('dragEffectAllowed');
         if (evt.dataTransfer.setDragImage) {
           // IE/Edge don't support this
@@ -244,6 +247,7 @@ export default Ember.Component.extend({
       // don't check enableDragging because clearly we've already allowed
       // a drag to start on this element
 
+      this.get('dataTransferService').clearData();
       this._clearDragGhost();
 
       // We have to do this this in next() because we set
@@ -273,10 +277,14 @@ export default Ember.Component.extend({
    */
   dragEnter(evt) {
     if (this.get('enableDropping')) {
+      const { dragData, dragScope } = this.get('dataTransferService').getData();
+      // TODO(kapil) scope: actually do something with this data
+
       // TODO(kapil) don't set this to true if an item is dragging over itself
       this.set('isDraggedOver', true);
 
-      // Touch events don't have dataTransfer
+      // If we're doing HTML5 drag and drop, then do all the fancy
+      // HTML5 drag and drop stuff
       if (evt.dataTransfer) {
         evt.dataTransfer.dropEffect = this.get('dropEffect');
       }
@@ -341,11 +349,8 @@ export default Ember.Component.extend({
     if (this.get('enableDropping')) {
       evt = this._maybeOriginalEvent(evt);
 
-      // Touch events don't have dataTransfer, so we
-      // have to fall back on our simulated event hack
-      const { dragData, dragScopeArray } = evt.dataTransfer
-        ? this._fromDragDataAttr(evt.dataTransfer.getData(HTML5_DATA_TRANSFER_TYPE))
-        : this._fromDragDataAttr($(evt.target).data(DATA_TRANSFER_KEY));
+      const { dragData, dragScope } = this.get('dataTransferService').getData();
+      // TODO(kapil) scope: actually do something with this data
 
       this.sendAction(
         'onDrop',
@@ -447,10 +452,7 @@ export default Ember.Component.extend({
       if ($dragOverElem) {
         // HACK ALERT: set the dragItemData on the drop target element
         // using JQuery data since we cannot pass it any other way
-        Ember.run(() => {
-          $dragOverElem.data(DATA_TRANSFER_KEY, this._makeDragDataAttr());
-          $dragOverElem.trigger('drop');
-        });
+        Ember.run(() => $dragOverElem.trigger('drop'));
       }
     }
 
@@ -481,7 +483,7 @@ export default Ember.Component.extend({
     // to clean up when we unfocus this element
   },
 
-  focusOut(evt) {
+  focusOut() {
     // TODO(kapil) if we're dragging when we lose focus, we need to
     // end the drag (not as explicit cancel, but as a premature end)
 
@@ -555,40 +557,6 @@ export default Ember.Component.extend({
   },
 
   /* BEGIN HELPERS *******************/
-  _makeDragDataAttr() {
-    const data = this.get('data');
-    const dragScopeAny = this.get('dragScopeAny');
-    const dragScopeArray = this.get('dragScopeArray');
-
-    if (dragScopeAny) {
-      return data;
-    } else {
-      const dragScopeStr = dragScopeArray.join(',');
-      return `${data};${dragScopeStr}`;
-    }
-  },
-
-  _fromDragDataAttr(dragDataAttr) {
-    const bigSplit = dragDataAttr.split(';');
-
-    if (bigSplit.length >= 2) {
-      const data = bigSplit[0];
-      const dragScopeStr = bigSplit[1];
-
-      return {
-        dragData: data,
-        dragScopeArray: makeArray(dragScopeStr)
-      };
-    } else if (bigSplit.length === 1) {
-      return {
-        dragData: bigSplit[0],
-        dragScopeArray: null
-      }
-    } else {
-      return null;
-    }
-  },
-
   _createDragGhost() {
     // In case we already have a drag ghost, use that one
     // If you want to create a new drag ghost, call _clearDragGhost()
@@ -737,10 +705,7 @@ export default Ember.Component.extend({
   _dropByKey(evt) {
     const $dragOverElem = this.get('$dragOverElem');
     if ($dragOverElem) {
-      Ember.run(() => {
-        $dragOverElem.data(DATA_TRANSFER_KEY, this._makeDragDataAttr());
-        $dragOverElem.trigger('drop');
-      });
+      Ember.run(() => $dragOverElem.trigger('drop'));
     }
     this._endDragByKey(evt);
   },
