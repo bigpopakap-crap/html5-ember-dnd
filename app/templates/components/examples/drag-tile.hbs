@@ -2,5 +2,15 @@
     {{title}}
 </div>
 <div class="body">
-    Options go here
+    <div class="input-group">
+        {{input type="checkbox" checked=enableDragging}}
+        <label>Draggable. Scope: </label>
+        {{input type="text" value=dragScope}}
+    </div>
+
+    <div class="input-group">
+        {{input type="checkbox" checked=enableDropping}}
+        <label>Droppable. Scope: </label>
+        {{input type="text" value=dropScope}}
+    </div>
 </div>

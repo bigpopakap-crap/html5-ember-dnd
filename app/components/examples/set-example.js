@@ -8,7 +8,6 @@ export default Ember.Component.extend({
   title: 'Single Set Example',
   containerClass: 'single-set-example',
 
-  enableSorting: true,
   enableDragHandle: true,
   resetAfterDropOutside: true,
   resetAfterDragCancel: true,
@@ -75,7 +74,13 @@ export default Ember.Component.extend({
   _createItem(key) {
     return {
       key,
-      title: `Item ${key}`
+      title: `Item ${key}`,
+      dnd: {
+        enableDragging: true,
+        enableDropping: true,
+        dragScope: this.get('containerClass'),
+        dropScope: this.get('containerClass')
+      }
     };
   }
 });
