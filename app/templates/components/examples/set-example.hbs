@@ -65,7 +65,9 @@
         {{#dnd.cmp class="draggable"
                    dragHandleSelector=itemDragHandleSelector
                    enableDragging=enableSorting
-                   enableDropping=enableSorting}}
+                   enableDropping=enableSorting
+                   dragScope=containerClass
+                   dropScope=containerClass}}
             {{examples/drag-tile title=dnd.item.text
                                  body=dnd.item.subtext}}
         {{/dnd.cmp}}

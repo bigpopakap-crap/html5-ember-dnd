@@ -1,23 +1,23 @@
 import Ember from 'ember';
 
 export default Ember.Service.extend({
-  _dragData: null,        // the "data" attribute of the item being dragged
-  _dragScope: null,       // the "dragScope" of of the item being dragged
+  dragData: null,        // the "data" attribute of the item being dragged
+  dragScopeArray: null,  // the "dragScope" of of the item being dragged
 
-  setData({ dragData, dragScope }) {
-    this.set('_dragData', dragData);
-    this.set('_dragScope', dragScope);
+  setData({ dragData, dragScopeArray }) {
+    this.set('dragData', dragData);
+    this.set('dragScopeArray', dragScopeArray);
   },
 
   getData() {
     return {
-      dragData: this.get('_dragData'),
-      dragScope: this.get('dragScope')
+      dragData: this.get('dragData'),
+      dragScopeArray: this.get('dragScopeArray')
     };
   },
 
   clearData() {
-    this.set('_dragData', null);
-    this.set('_dragScope', null);
+    this.set('dragData', null);
+    this.set('dragScopeArray', null);
   }
 });
