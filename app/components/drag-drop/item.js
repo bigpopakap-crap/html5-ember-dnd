@@ -72,9 +72,9 @@ export default Ember.Component.extend({
   $dragGhost: null, // the JQuery element that we are moving around with the drag
   									// we do this because HTML5 drag and drop doesn't do a good job with that
 
-  isPressed: Ember.computed.and('isMouseDown', 'notIsDragHandlePressed'),
-  isGrabbedByMouse: Ember.computed.and('isMouseDown', 'isDragHandlePressed'),
-  isGrabbedByKey: Ember.computed.and('isSpaceKeyTyped', 'isFocused'),
+  isPressed: Ember.computed.and('isMouseDown'),
+  isGrabbedByMouse: Ember.computed.and('enableDragging', 'isMouseDown', 'isDragHandlePressed'),
+  isGrabbedByKey: Ember.computed.and('enableDragging', 'isSpaceKeyTyped', 'isFocused'),
   isGrabbed: Ember.computed.or('isGrabbedByMouse', 'isGrabbedByKey'),
 
   // Don't apply the CSS for dragging if we're dragging using the keyboard
@@ -165,7 +165,7 @@ export default Ember.Component.extend({
 
     /* BEGIN DRAGGABLE EVENTS *******************/
     dragStart(evt) {
-      if (!this.get('isGrabbed')) {
+      if (!this.get('enableDragging') || !this.get('isGrabbed')) {
         return false;
       }
 
@@ -198,6 +198,10 @@ export default Ember.Component.extend({
     },
 
     drag(evt) {
+      if (!this.get('enableDragging')) {
+        return false;
+      }
+
       const eventData = this._eventData(evt, {
         dragData: this.get('data')
       });
@@ -313,7 +317,7 @@ export default Ember.Component.extend({
 
   /* BEGIN TOUCH EVENTS **************/
   touchStart(evt) {
-    if (!this.get('enableTouch')) {
+    if (!this.get('enableDragging') || !this.get('enableTouch')) {
       return false;
     }
 
@@ -335,10 +339,6 @@ export default Ember.Component.extend({
   },
 
   touchMove(evt) {
-    if (!this.get('enableTouch')) {
-      return false;
-    }
-
     evt = this._maybeOriginalEvent(evt);
     const touch = this._maybeTouchEvent(evt);
     if (touch === evt) {
@@ -391,10 +391,6 @@ export default Ember.Component.extend({
   },
 
   touchEnd(evt) {
-    if (!this.get('enableTouch')) {
-      return false;
-    }
-
     /*
      * BEGIN TOUCH HACKS
      * Simulate the drop event on the element that we are moving over
@@ -419,10 +415,6 @@ export default Ember.Component.extend({
   },
 
   touchCancel(evt) {
-    if (!this.get('enableTouch')) {
-      return false;
-    }
-
     this.set('_touchOffsetX', null);
     this.set('_touchOffsetY', null);
     this.set('$dragOverElem', null);
@@ -473,7 +465,7 @@ export default Ember.Component.extend({
         case KEY_CODES.ENTER:
           if (this.get('isDragging')) {
             this._dropByKey(evt);
-          } else {
+          } else if (this.get('enableDragging')) {
             this.toggleProperty('isSpaceKeyTyped');
           }
           return false;
