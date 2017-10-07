@@ -198,9 +198,8 @@ export default Ember.Component.extend({
     },
 
     drag(evt) {
-      if (!this.get('enableDragging')) {
-        return false;
-      }
+      // don't check enableDragging because clearly we've already allowed
+      // a drag to start on this element
 
       const eventData = this._eventData(evt, {
         dragData: this.get('data')
@@ -210,6 +209,9 @@ export default Ember.Component.extend({
     },
 
     dragEnd(evt) {
+      // don't check enableDragging because clearly we've already allowed
+      // a drag to start on this element
+
       this._clearDragGhost();
 
       // We have to do this this in next() because we set
@@ -262,7 +264,10 @@ export default Ember.Component.extend({
   },
 
   dragOver(evt) {
-    if (this.get('enableDropping')) {
+    // don't check enableDropping, and instead check "isDraggedOver"
+    // because if "isDraggedOver" is true, then we've already let a drag
+    // through so we should continue to let it through
+    if (this.get('isDraggedOver')) {
       this.sendAction(
         'onDragOver',
         this._eventData(evt, {
@@ -278,7 +283,10 @@ export default Ember.Component.extend({
   },
 
   dragLeave(evt) {
-    if (this.get('enableDropping')) {
+    // don't check enableDropping, and instead check "isDraggedOver"
+    // because if "isDraggedOver" is true, then we've already let a drag
+    // through so we should continue to let it through
+    if (this.get('isDraggedOver')) {
       this.set('isDraggedOver', false);
 
       this.sendAction(
@@ -292,10 +300,14 @@ export default Ember.Component.extend({
   },
 
   drop(evt) {
+    // Always set this to false, in case this item had "isDraggedOver"=true
+    // set before "enableDropping" was set to false
+    this.set('isDraggedOver', false);
+
+    // Actually check "enableDropping" instead of "isDraggedOver" because
+    // we don't want any reordering to be made final
     if (this.get('enableDropping')) {
       evt = this._maybeOriginalEvent(evt);
-
-      this.set('isDraggedOver', false);
 
       // Touch events don't have dataTransfer, so we
       // have to fall back on our simulated event hack
