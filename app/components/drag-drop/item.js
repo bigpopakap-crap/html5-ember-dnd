@@ -216,6 +216,9 @@ export default Ember.Component.extend({
           dragData: this.get('data')
         })
       );
+
+      // Make sure we focus this thing afterwards
+      Ember.run.scheduleOnce('afterRender', () => this.$().trigger('focus'));
     }
   },
 
