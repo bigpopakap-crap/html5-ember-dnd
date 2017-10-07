@@ -45,6 +45,9 @@ export default Ember.Component.extend({
       .filter(sortableItem => !Ember.isNone(sortableItem.get('sortKey')));
   }),
 
+  // TODO(kapil) animate elements when they're added or removed
+  // and provide params to dictate what kind of animation to use
+
   actions: {
     afterGrab() {
       this.set('isGrabbed', true);
