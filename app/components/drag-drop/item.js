@@ -152,9 +152,15 @@ export default Ember.Component.extend({
     },
 
     mouseLeave() {
-      this.set('isHovered', false);
-      this.set('isMouseDown', false);
-      this.set('dragTarget', null);
+      // Technically, while dragging something, the mouse leaves itself
+      // because we're only dragging a ghost. We don't want to pretend
+      // that the dragged item is not hovered/grabbed, so we don't
+      // erase these flags unless the item is not being dragged
+      if (!this.get('isDragging')) {
+        this.set('isHovered', false);
+        this.set('isMouseDown', false);
+        this.set('dragTarget', null);
+      }
     },
 
     /* BEGIN DRAGGABLE EVENTS *******************/
@@ -229,6 +235,7 @@ export default Ember.Component.extend({
    */
   dragEnter(evt) {
     if (this.get('enableDropping')) {
+      // TODO(kapil) don't set this to true if an item is dragging over itself
       this.set('isDraggedOver', true);
 
       // Touch events don't have dataTransfer

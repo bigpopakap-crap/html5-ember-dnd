@@ -1,9 +1,9 @@
 {{#each _sortableItems key="sortKey" as |sortableItem|}}
     {{#drag-drop/item class=itemClass
-                      data=sortableItem.sortKey
                       dragHandleSelector=itemDragHandleSelector
                       enableDragging=enableSorting
                       enableDropping=enableSorting
+                      data=sortableItem.sortKey
                       enableTouch=enableTouch
                       enableKeyboard=enableKeyboard
                       beReadyForDrop=isGrabbed
