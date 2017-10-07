@@ -341,13 +341,15 @@ export default Ember.Component.extend({
   },
 
   drop(evt) {
+    const { dragData } = this.get('dataTransferService').getData();
+    const isOverSelf = this.get('data') === dragData;
+
     // don't check enableDropping, and instead check "isDraggedOver"
     // because if "isDraggedOver" is true, then we've already let a drag
     // through so we should continue to let it through
-    if (this.get('isDraggedOver')) {
+    if (isOverSelf || this.get('isDraggedOver')) {
       this.set('isDraggedOver', false);
 
-      const { dragData } = this.get('dataTransferService').getData();
       evt = this._maybeOriginalEvent(evt);
 
       this.sendAction(
