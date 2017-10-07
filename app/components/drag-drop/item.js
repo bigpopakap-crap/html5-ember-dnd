@@ -51,6 +51,10 @@ export default Ember.Component.extend({
 
   // PASSED IN
   data: '', // REQUIRED - a string to pass along with the element
+  // If two elements' scopes don't match, they will each behave as if the other doesn't
+  // exist. If you want them to interact with each other but sometimes block
+  // a dragOver or drop from occurring, you'll need to do that yourself in the
+  // "sortRequested" handler
   dragScope: null, // An array or comma-separated list that determines where this item can be dragged.
                    // It can be dragged onto any element whose dropScope shares at least one keyword
                    // null means it can be dragged anywhere
@@ -496,6 +500,7 @@ export default Ember.Component.extend({
     this.send('mouseLeave');
   },
 
+  // TODO(kapil) disable some keys if this is being dragged by touch or mouse
   keyDown(evt) {
     if (this.get('enableKeyboard')) {
       switch (evt.keyCode) {
@@ -729,6 +734,7 @@ export default Ember.Component.extend({
     Ember.run.scheduleOnce('afterRender', () => this.$().trigger('focus'));
   },
 
+  // TODO(kapil) filter out elements whose dropScope doesn't match our dragScope
   _dragByKeyTargets(direction) {
     const $this = this.$();
     const thisPosition = $this.offset();
