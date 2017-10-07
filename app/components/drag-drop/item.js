@@ -36,21 +36,36 @@ function dotP(x, y, a, b) {
   return x*a + y*b;
 }
 
-// IE11 and Edge only support "text"
-const DATA_TRANSFER_TYPE = 'text';
-const TOUCH_DATA_TRANSFER_KEY = 'dragDrop_component_dragData';
+function makeArray(maybeArray) {
+  if (!maybeArray) {
+    return null;
+  } else if (typeof makeArray === 'string') {
+    return Ember.makeArray(maybeArray.split(','));
+  } else {
+    return Ember.makeArray(maybeArray);
+  }
+}
 
 export default Ember.Component.extend({
+  dataTransferService: Ember.inject.service('drag-drop/data-transfer'),
+
   // PASSED IN
   data: '', // REQUIRED - a string to pass along with the element
+  // If two elements' scopes don't match, they will each behave as if the other doesn't
+  // exist. If you want them to interact with each other but sometimes block
+  // a dragOver or drop from occurring, you'll need to do that yourself in the
+  // "sortRequested" handler
+  dragScope: null, // An array or comma-separated list that determines where this item can be dragged.
+                   // It can be dragged onto any element whose dropScope shares at least one keyword
+                   // null or empty string means it cannot be dragged anywhere
+  dropScope: null, // Array or comma-separated list. See dragScope for more info
+                   // null or empty string means nothing can be dragged onto this
   enableDragging: false, // use this flag to turn on/off dragging behavior
   enableDropping: false, // use this flag to enable/disable this element as a drop target
   dragHandleSelector: null, // (optional) a CSS selector of the part of this element from
  														// where a drag can be initiated
   enableTouch: true,
   enableKeyboard: true,
-  beReadyForDrop: false, // flag to indicate that some item is being dragged that might be
-                         // dropped onto this item
   tabIndex: 0,
 
   // SHOULD PROBABLY BE PRIVATE
@@ -82,12 +97,19 @@ export default Ember.Component.extend({
   isStyledAsDragging: Ember.computed.and('isDragging', 'notIsDraggingByKey'),
 
   // TODO(kapil) this observer fires too many events. Need a better way to do this
-  isGrabChanged: Ember.observer('isGrabbed', function() {
-    if (this.get('isGrabbed')) {
-      this.sendAction('afterGrab', this.get('data'));
-    } else {
-      this.sendAction('afterRelease', this.get('data'));
-    }
+//  isGrabChanged: Ember.observer('isGrabbed', function() {
+//    if (this.get('isGrabbed')) {
+//      this.sendAction('afterGrab', this.get('data'));
+//    } else {
+//      this.sendAction('afterRelease', this.get('data'));
+//    }
+//  }),
+
+  beReadyForDrop: Ember.computed('dataTransferService.dragScopeArray', function() {
+    return this._scopesMatch(
+      this.get('dataTransferService.dragScopeArray'),
+      this.get('dropScopeArray')
+    );
   }),
 
   ariaGrabbed: Ember.computed('enableDragging', 'enableKeyboard', 'isGrabbed', function() {
@@ -113,6 +135,13 @@ export default Ember.Component.extend({
     return Ember.$(dragTarget).is(dragHandleSelector);
   }),
 
+  dragScopeArray: Ember.computed('dragScope', function() {
+    return makeArray(this.get('dragScope'));
+  }),
+  dropScopeArray: Ember.computed('dropScope', function() {
+    return makeArray(this.get('dropScope'));
+  }),
+
   classNames: ['drag-drop'],
   classNameBindings: [
     'beReadyForDrop:drag-drop--ready',
@@ -128,6 +157,8 @@ export default Ember.Component.extend({
 
   attributeBindings: [
     'data:data-drag-drop-data',
+    'dragScopeArray:data-drop-drop-drag-scope',
+    'dropScopeArray:data-drop-drop-drop-scope',
     'tabIndex:tabindex',
     'ariaGrabbed:aria-grabbed',
     'ariaDropEffect:aria-dropeffect'
@@ -180,9 +211,14 @@ export default Ember.Component.extend({
 
       const $dragGhost = this._createDragGhost(eventData);
 
-      // Touch events don't have dataTransfer
+      this.get('dataTransferService').setData({
+        dragData: this.get('data'),
+        dragScopeArray: this.get('dragScopeArray')
+      });
+
+      // If we're doing regular HTML5 drag and drop (not touch or keyboard),
+      // then do the HTML5 stuff
       if (evt.dataTransfer) {
-        evt.dataTransfer.setData(DATA_TRANSFER_TYPE, this.get('data'));
         evt.dataTransfer.effectAllowed = this.get('dragEffectAllowed');
         if (evt.dataTransfer.setDragImage) {
           // IE/Edge don't support this
@@ -212,6 +248,7 @@ export default Ember.Component.extend({
       // don't check enableDragging because clearly we've already allowed
       // a drag to start on this element
 
+      this.get('dataTransferService').clearData();
       this._clearDragGhost();
 
       // We have to do this this in next() because we set
@@ -240,11 +277,15 @@ export default Ember.Component.extend({
     drag-drop__drag-content div
    */
   dragEnter(evt) {
-    if (this.get('enableDropping')) {
+    const { dragData, dragScopeArray } = this.get('dataTransferService').getData();
+    const scopesMatch = this._scopesMatch(dragScopeArray, this.get('dropScopeArray'));
+
+    if (this.get('enableDropping') && scopesMatch) {
       // TODO(kapil) don't set this to true if an item is dragging over itself
       this.set('isDraggedOver', true);
 
-      // Touch events don't have dataTransfer
+      // If we're doing HTML5 drag and drop, then do all the fancy
+      // HTML5 drag and drop stuff
       if (evt.dataTransfer) {
         evt.dataTransfer.dropEffect = this.get('dropEffect');
       }
@@ -300,20 +341,16 @@ export default Ember.Component.extend({
   },
 
   drop(evt) {
-    // Always set this to false, in case this item had "isDraggedOver"=true
-    // set before "enableDropping" was set to false
-    this.set('isDraggedOver', false);
+    const { dragData } = this.get('dataTransferService').getData();
+    const isOverSelf = this.get('data') === dragData;
 
-    // Actually check "enableDropping" instead of "isDraggedOver" because
-    // we don't want any reordering to be made final
-    if (this.get('enableDropping')) {
+    // don't check enableDropping, and instead check "isDraggedOver"
+    // because if "isDraggedOver" is true, then we've already let a drag
+    // through so we should continue to let it through
+    if (isOverSelf || this.get('isDraggedOver')) {
+      this.set('isDraggedOver', false);
+
       evt = this._maybeOriginalEvent(evt);
-
-      // Touch events don't have dataTransfer, so we
-      // have to fall back on our simulated event hack
-      const dragData = evt.dataTransfer
-        ? evt.dataTransfer.getData(DATA_TRANSFER_TYPE)
-        : $(evt.target).data(TOUCH_DATA_TRANSFER_KEY);
 
       this.sendAction(
         'onDrop',
@@ -415,10 +452,7 @@ export default Ember.Component.extend({
       if ($dragOverElem) {
         // HACK ALERT: set the dragItemData on the drop target element
         // using JQuery data since we cannot pass it any other way
-        Ember.run(() => {
-          $dragOverElem.data(TOUCH_DATA_TRANSFER_KEY, this.get('data'));
-          $dragOverElem.trigger('drop');
-        });
+        Ember.run(() => $dragOverElem.trigger('drop'));
       }
     }
 
@@ -449,7 +483,7 @@ export default Ember.Component.extend({
     // to clean up when we unfocus this element
   },
 
-  focusOut(evt) {
+  focusOut() {
     // TODO(kapil) if we're dragging when we lose focus, we need to
     // end the drag (not as explicit cancel, but as a premature end)
 
@@ -462,6 +496,7 @@ export default Ember.Component.extend({
     this.send('mouseLeave');
   },
 
+  // TODO(kapil) disable some keys if this is being dragged by touch or mouse
   keyDown(evt) {
     if (this.get('enableKeyboard')) {
       switch (evt.keyCode) {
@@ -638,6 +673,26 @@ export default Ember.Component.extend({
     );
   },
 
+  _scopesMatch(dragScope, dropScope) {
+    const dragScopeArray = makeArray(dragScope);
+    const dropScopeArray = makeArray(dropScope);
+
+    if (!dragScopeArray || !dropScopeArray) {
+      // neither thing can be moved
+      return true;
+    } else {
+      let foundMatch = false;
+
+      dragScopeArray.forEach(scope => {
+        if (dropScopeArray.includes(scope)) {
+          foundMatch = true;
+        }
+      });
+
+      return foundMatch;
+    }
+  },
+
   _focusByKey(evt, direction) {
     const $sortedTargets = this._dragByKeyTargets(direction);
     const $target = $sortedTargets && $sortedTargets[0];
@@ -706,11 +761,23 @@ export default Ember.Component.extend({
       }
     })();
 
+    const dragScopeArray = this.get('dragScopeArray');
+
     return findDragDropElements()
       .all()
       .toArray()
       .map(item => Ember.$(item))
       .filter($item => !$item.is($this))
+      .filter($item => {
+        if (!this.get('isGrabbed')) {
+          // allow simply focusing any element
+          return true;
+        } else {
+          // if we're dragging, only consider items whose dropScope matches our dragScope
+          const dropScope = $item.attr('data-drop-drop-drop-scope');
+          return this._scopesMatch(dragScopeArray, dropScope);
+        }
+      })
       .map($item => {
         const dx = $item.offset().left - thisPosition.left;
         const dy = $item.offset().top - thisPosition.top;

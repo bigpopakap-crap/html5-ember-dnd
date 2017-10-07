@@ -8,7 +8,6 @@ export default Ember.Component.extend({
   title: 'Single Set Example',
   containerClass: 'single-set-example',
 
-  enableSorting: true,
   enableDragHandle: true,
   resetAfterDropOutside: true,
   resetAfterDragCancel: true,
@@ -43,38 +42,45 @@ export default Ember.Component.extend({
   init(...args) {
     this._super(...args);
 
+    this.set('nextKey', 'a');
     this.set('items', [
-      { key: 'A', text: 'Item A', subtext: 'blah blah blah blah' },
-      { key: 'b', text: 'Item B', subtext: 'shmooop bloop' },
-      { key: 'c', text: 'Item C', subtext: 'yaddah yaddah yaddah' },
-      { key: 'd', text: 'Item D', subtext: 'lorem ipsum whatever' },
-      { key: 'e', text: 'Item E', subtext: 'meeeeehhhhhhhhhhhh' },
-      { key: 'f', text: 'Item F', subtext: '......' }
+      this._createItem(this._advanceItemKey()),
+      this._createItem(this._advanceItemKey()),
+      this._createItem(this._advanceItemKey()),
+      this._createItem(this._advanceItemKey()),
+      this._createItem(this._advanceItemKey())
     ]);
-
-    this.set('nextKey', 'g');
   },
 
   actions: {
     createItemFirst() {
-      const newItem = this._createItem();
+      const newItem = this._createItem(this._advanceItemKey());
       this.get('items').insertAt(0, newItem);
     },
 
     createItemLast() {
-      const newItem = this._createItem();
+      const newItem = this._createItem(this._advanceItemKey());
       const len = this.get('items.length') || 0;
       this.get('items').insertAt(len, newItem);
     }
   },
 
-  _createItem() {
-    const nextKey = this.get('nextKey');
-    this.set('nextKey', nextChar(nextKey));
+  _advanceItemKey() {
+    const key = this.get('nextKey');
+    this.set('nextKey', nextChar(key));
+    return key;
+  },
+
+  _createItem(key) {
     return {
-      key: nextKey,
-      text: `Item ${nextKey}`,
-      subtext: this.get('newItemText')
+      key,
+      title: `Item ${key}`,
+      dnd: {
+        enableDragging: true,
+        enableDropping: true,
+        dragScope: this.get('containerClass'),
+        dropScope: this.get('containerClass')
+      }
     };
   }
 });

@@ -23,7 +23,6 @@ export default Ember.Component.extend({
                                 // drag (ex. with the ESC key)
 
   // PRIVATE
-  isGrabbed: false,     // tracks whether something in the list is grabbed
   isAnimating: false,
   _originalItems: null, // the original list of items stored
   											// during a drag, in case we need to revert
@@ -45,11 +44,10 @@ export default Ember.Component.extend({
       .filter(sortableItem => !Ember.isNone(sortableItem.get('sortKey')));
   }),
 
-  actions: {
-    afterGrab() {
-      this.set('isGrabbed', true);
-    },
+  // TODO(kapil) animate elements when they're added or removed
+  // and provide params to dictate what kind of animation to use
 
+  actions: {
     onDragStart({ dragData: draggedItemKey }) {
       // remember which widget we are currently dragging
       this.set('_currentDraggedItemKey', draggedItemKey);
@@ -123,10 +121,6 @@ export default Ember.Component.extend({
       this._dropSucceeded = null;
       this._originalItems = null;
       this.set('_currentDraggedItemKey', null);
-    },
-
-    afterRelease() {
-      this.set('isGrabbed', false);
     }
   },
 

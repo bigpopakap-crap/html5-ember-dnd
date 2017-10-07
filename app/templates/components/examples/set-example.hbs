@@ -1,11 +1,6 @@
 <h1>{{title}}</h1>
 <div class="toggles">
     <div class="input-group">
-        {{input type="checkbox" checked=enableSorting}}
-        <label>Enable sort</label>
-    </div>
-
-    <div class="input-group">
         {{input type="checkbox" checked=useSwap}}
         <label>Swapping sort</label>
     </div>
@@ -27,7 +22,8 @@
 
     <div class="input-group">
         {{input type="checkbox" checked=enableAnimation}}
-        <label>Animations</label>
+        <label>Animations. Speed: </label>
+        {{input type="text" value=animationDurationInput}}
     </div>
 
     <div class="input-group">
@@ -38,11 +34,6 @@
     <div class="input-group">
         {{input type="checkbox" checked=enableKeyboard}}
         <label>Keyboard enabled</label>
-    </div>
-
-    <div class="input-group">
-        {{input type="text" value=animationDurationInput}}
-        <label>Animation speed (fast, slow, millis)</label>
     </div>
 
     <div class="input-group">
@@ -64,10 +55,15 @@
                                as |dnd|}}
         {{#dnd.cmp class="draggable"
                    dragHandleSelector=itemDragHandleSelector
-                   enableDragging=enableSorting
-                   enableDropping=enableSorting}}
-            {{examples/drag-tile title=dnd.item.text
-                                 body=dnd.item.subtext}}
+                   enableDragging=dnd.item.dnd.enableDragging
+                   enableDropping=dnd.item.dnd.enableDropping
+                   dragScope=dnd.item.dnd.dragScope
+                   dropScope=dnd.item.dnd.dropScope}}
+            {{examples/drag-tile title=dnd.item.title
+                                 enableDragging=dnd.item.dnd.enableDragging
+                                 enableDropping=dnd.item.dnd.enableDropping
+                                 dragScope=dnd.item.dnd.dragScope
+                                 dropScope=dnd.item.dnd.dropScope}}
         {{/dnd.cmp}}
     {{/component}}
 </div>
