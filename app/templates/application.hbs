@@ -1,9 +1,19 @@
+<div class="input-group">
+    {{input type="checkbox" checked=linkLists}}
+    <label>Link lists</label>
+</div>
+
+<div class="input-group">
+    {{input type="checkbox" checked=onlyForward}}
+    <label>One-way (forward)</label>
+</div>
+
 {{examples/example-set class="example example-set-1"
-                       name="set-1"
-                       dragScope="set-1"
-                       dropScope="set-1"}}
+                       name=set1Name
+                       dragScope=set1DragScope
+                       dropScope=set1DropScope}}
 {{examples/example-set class="example example-set-2"
-                       name="set-2"
-                       dragScope="set-2"
-                       dropScope="set-2"}}
+                       name=set2Name
+                       dragScope=set2DragScope
+                       dropScope=set2DropScope}}
 {{!TODO add an example of a custom sort function}}
