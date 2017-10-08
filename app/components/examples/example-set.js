@@ -44,8 +44,6 @@ export default Ember.Component.extend({
     this._super(...args);
 
     this.set('containerClass', this.get('name'));
-    this.set('dragScope', this.get('name'));
-    this.set('dropScope', this.get('name'));
 
     this.set('nextKey', 'a');
     this.set('items', [
