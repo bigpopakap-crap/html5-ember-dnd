@@ -1,7 +1,7 @@
-{{#each _sortableItems key="sortKey" as |sortableItem|}}
+{{#each items key="sortKey" as |item|}}
     {{yield (hash
         cmp=(component "drag-drop/item"
-            data=sortableItem.sortKey
+            data=item.sortKey
             enableTouch=enableTouch
             enableKeyboard=enableKeyboard
             onDragStart=(action "onDragStart")
@@ -10,6 +10,6 @@
             onDragCancel=(action "onDragCancel")
             onDragEnd=(action "onDragEnd")
         )
-        item=sortableItem.content
+        item=item
     )}}
 {{/each}}

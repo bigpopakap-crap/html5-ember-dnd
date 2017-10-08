@@ -76,7 +76,7 @@ export default Ember.Component.extend({
 
   _createItem(key) {
     return {
-      key,
+      sortKey: key,
       title: `Item ${key}`,
       dnd: {
         enableDragging: true,

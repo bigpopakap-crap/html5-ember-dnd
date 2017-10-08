@@ -1,11 +1,5 @@
 import Ember from 'ember';
 
-const DragDropSortableListItem = Ember.ObjectProxy.extend({
-  sortKey: Ember.computed('sortKeyProperty', function() {
-    return this.get(this.get('sortKeyProperty'));
-  })
-});
-
 export default Ember.Component.extend({
   setTransferService: Ember.inject.service('drag-drop/set-transfer'),
   animationService: Ember.inject.service('drag-drop/animation'),
@@ -13,7 +7,6 @@ export default Ember.Component.extend({
   // PASSED IN
   parentSelector: 'body', // a CSS selector to the parent element, or something
   												// that will uniquely scope this component on the page
-  sortProperty: null,
   enableAnimation: false,
   enableTouch: true,
   enableKeyboard: true,
@@ -36,15 +29,6 @@ export default Ember.Component.extend({
 
   tagName: '',
 
-  _sortableItems: Ember.computed('items.[]', 'sortProperty', function() {
-    return this.get('items')
-      .map(item => DragDropSortableListItem.create({
-      	content: item,
-        sortKeyProperty: this.get('sortProperty')
-      }))
-      .filter(sortableItem => !Ember.isNone(sortableItem.get('sortKey')));
-  }),
-
   // TODO(kapil) animate elements when they're added or removed
   // and provide params to dictate what kind of animation to use
 
@@ -58,8 +42,7 @@ export default Ember.Component.extend({
 
       this.get('setTransferService').setData({
         setComponent: this,
-        sortProperty: this.get('sortProperty'),
-        draggedItem: this.get('_sortableItems').findBy('sortKey', draggedItemKey)
+        draggedItem: this.get('items').findBy('sortKey', draggedItemKey)
       });
     },
 
@@ -135,12 +118,13 @@ export default Ember.Component.extend({
 
   /* BEGIN HELPERS **************************/
   _getItemIndexByKey(itemSortKey) {
-    const sortableItems = this.get('_sortableItems');
-    return sortableItems.indexOf(sortableItems.findBy('sortKey', itemSortKey));
+    const items = this.get('items');
+    const item = items.findBy('sortKey', itemSortKey);
+    return items.indexOf(item);
   },
 
   _getItemKeys() {
-    return this.get('_sortableItems').mapBy('sortKey');
+    return this.get('items').mapBy('sortKey');
   },
 
   _sortItems(draggedItemKey, dropItemKey) {
