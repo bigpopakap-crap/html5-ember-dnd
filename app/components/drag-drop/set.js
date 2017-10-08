@@ -42,7 +42,7 @@ export default Ember.Component.extend({
 
       this.get('setTransferService').setData({
         setComponent: this,
-        draggedItem: this.get('items').findBy('sortKey', draggedItemKey)
+        draggedItem: this._getItemByKey(draggedItemKey)
       });
     },
 
@@ -117,9 +117,14 @@ export default Ember.Component.extend({
   },
 
   /* BEGIN HELPERS **************************/
+  _getItemByKey(itemSortKey) {
+    const items = this.get('items');
+    return items.findBy('sortKey', itemSortKey);
+  },
+
   _getItemIndexByKey(itemSortKey) {
     const items = this.get('items');
-    const item = items.findBy('sortKey', itemSortKey);
+    const item = this._getItemByKey(itemSortKey);
     return items.indexOf(item);
   },
 
