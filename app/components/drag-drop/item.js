@@ -280,9 +280,10 @@ export default Ember.Component.extend({
    */
   dragEnter(evt) {
     const { dragData, dragScopeArray } = this.get('dataTransferService').getData();
+    const isOverSelf = this.get('data') === dragData;
     const scopesMatch = this._scopesMatch(dragScopeArray, this.get('dropScopeArray'));
 
-    if (this.get('enableDropping') && scopesMatch) {
+    if (this.get('enableDropping') && !isOverSelf && scopesMatch) {
       // TODO(kapil) don't set this to true if an item is dragging over itself
       this.set('isDraggedOver', true);
 
