@@ -7,6 +7,7 @@ const DragDropSortableListItem = Ember.ObjectProxy.extend({
 });
 
 export default Ember.Component.extend({
+  setTransferService: Ember.inject.service('drag-drop/set-transfer'),
   animationService: Ember.inject.service('drag-drop/animation'),
 
   // PASSED IN
@@ -54,6 +55,12 @@ export default Ember.Component.extend({
       this._originalItems = this.get('items').slice();
       this._dropSucceeded = false;
       this._dragCancelled = false;
+
+      this.get('setTransferService').setData({
+        setComponent: this,
+        sortProperty: this.get('sortProperty'),
+        draggedItem: this.get('_sortableItems').findBy('sortKey', draggedItemKey)
+      });
     },
 
     onDragOver({ dropData: dropItemKey }) {
@@ -121,6 +128,8 @@ export default Ember.Component.extend({
       this._dropSucceeded = null;
       this._originalItems = null;
       this.set('_currentDraggedItemKey', null);
+
+      this.get('setTransferService').clearData();
     }
   },
 
