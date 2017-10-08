@@ -1,5 +1,12 @@
-<h1>{{title}}</h1>
 <div class="toggles">
+    <div class="input-group">
+        <label>Drag scope:</label>
+        {{input type="text" value=dragScope}}
+
+        <label>Drop scope:</label>
+        {{input type="text" value=dropScope}}
+    </div>
+
     <div class="input-group">
         {{input type="checkbox" checked=useSwap}}
         <label>Swapping sort</label>
@@ -42,6 +49,7 @@
         <button {{action "createItemLast"}}>Create last</button>
     </div>
 </div>
+
 <div class="{{containerClass}}">
     {{#component componentName items
                                sortProperty="key"
@@ -57,19 +65,20 @@
                    dragHandleSelector=itemDragHandleSelector
                    enableDragging=dnd.item.dnd.enableDragging
                    enableDropping=dnd.item.dnd.enableDropping
-                   dragScope=dnd.item.dnd.dragScope
-                   dropScope=dnd.item.dnd.dropScope}}
+                   dragScope=dragScope
+                   dropScope=dropScope}}
             {{examples/drag-tile title=dnd.item.title
                                  enableDragging=dnd.item.dnd.enableDragging
                                  enableDropping=dnd.item.dnd.enableDropping
-                                 dragScope=dnd.item.dnd.dragScope
-                                 dropScope=dnd.item.dnd.dropScope}}
+                                 dragScope=dragScope
+                                 dropScope=dropScope}}
         {{/dnd.cmp}}
     {{/component}}
 </div>
 
-<h2>View Data</h2>
-<div>
+{{!TODO(kapil) add an area to display the events}}
+
+<div class="data-display">
     {{#each items as |item|}}
         <span>{{item.key}}</span>
     {{/each}}

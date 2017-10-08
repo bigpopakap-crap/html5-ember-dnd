@@ -39,7 +39,9 @@ function dotP(x, y, a, b) {
 function makeArray(maybeArray) {
   if (!maybeArray) {
     return null;
-  } else if (typeof makeArray === 'string') {
+  } else if (Ember.isArray(maybeArray)) {
+    return maybeArray;
+  } else if (typeof maybeArray === 'string') {
     return Ember.makeArray(maybeArray.split(','));
   } else {
     return Ember.makeArray(maybeArray);

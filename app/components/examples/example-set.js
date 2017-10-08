@@ -6,8 +6,9 @@ function nextChar(c) {
 
 export default Ember.Component.extend({
   title: 'Single Set Example',
-  containerClass: 'single-set-example',
-
+  containerClass: null,
+  dragScope: null,
+  dropScope: null,
   enableDragHandle: true,
   resetAfterDropOutside: true,
   resetAfterDragCancel: true,
@@ -41,6 +42,10 @@ export default Ember.Component.extend({
 
   init(...args) {
     this._super(...args);
+
+    this.set('containerClass', this.get('name'));
+    this.set('dragScope', this.get('name'));
+    this.set('dropScope', this.get('name'));
 
     this.set('nextKey', 'a');
     this.set('items', [
@@ -77,9 +82,7 @@ export default Ember.Component.extend({
       title: `Item ${key}`,
       dnd: {
         enableDragging: true,
-        enableDropping: true,
-        dragScope: this.get('containerClass'),
-        dropScope: this.get('containerClass')
+        enableDropping: true
       }
     };
   }
