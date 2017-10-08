@@ -1,6 +1,7 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
+  dataTransferService: Ember.inject.service('drag-drop/data-transfer'),
   setTransferService: Ember.inject.service('drag-drop/set-transfer'),
   animationService: Ember.inject.service('drag-drop/animation'),
 
@@ -20,7 +21,6 @@ export default Ember.Component.extend({
   isAnimating: false,
   _originalItems: null, // the original list of items stored
   											// during a drag, in case we need to revert
-  _currentDraggedItemKey: null, // track which item is being dragged
   _droppedItemKey: null, // keeps track of the last item that was dragged over
   										   // during the course of a drag
   _dragCancelled: null,
@@ -35,7 +35,6 @@ export default Ember.Component.extend({
   actions: {
     onDragStart({ dragData: draggedItemKey }) {
       // remember which widget we are currently dragging
-      this.set('_currentDraggedItemKey', draggedItemKey);
       this._originalItems = this.get('items').slice();
       this._dropSucceeded = false;
       this._dragCancelled = false;
@@ -47,10 +46,11 @@ export default Ember.Component.extend({
     },
 
     onDragOver({ dropData: dropItemKey }) {
-      const draggedItemKey = this.get('_currentDraggedItemKey');
+      const sourceSet = this.get('setTransferService.sourceSet');
+      const draggedItemKey = this.get('dataTransferService.dragData');
 
       // protects against drags from outside the browser tab
-      if (draggedItemKey) {
+      if (sourceSet === this) {
         // also against a million events when an element is dragged over itself
         if (draggedItemKey !== dropItemKey) {
           this._droppedItemKey = dropItemKey;
@@ -75,8 +75,8 @@ export default Ember.Component.extend({
       // is dragged over itself because that is actually expected. By the time we
       // get to onDrop, the element order has already changed and the dragged element
       // is actually being dropped on itself
-      const draggedItemKey = this.get('_currentDraggedItemKey');
-      if (draggedItemKey) {
+      const sourceSet = this.get('setTransferService.sourceSet');
+      if (sourceSet === this) {
         this._dropSucceeded = true;
       }
     },
@@ -86,7 +86,7 @@ export default Ember.Component.extend({
     },
 
     onDragEnd() {
-      const draggedItemKey = this.get('_currentDraggedItemKey');
+      const draggedItemKey = this.get('dataTransferService.dragData');
 
       // TODO(kapil) clean up this weird logic... it feels like we shouldn't
       // treat these two things differently
@@ -110,7 +110,6 @@ export default Ember.Component.extend({
       this._droppedItemKey = null;
       this._dropSucceeded = null;
       this._originalItems = null;
-      this.set('_currentDraggedItemKey', null);
 
       this.get('setTransferService').clearData();
     }
