@@ -81,8 +81,9 @@ export default Ember.Component.extend({
   },
 
   _createItem(key) {
+    const setName = this.get('name');
     return {
-      sortKey: key,
+      sortKey: `${setName}-${key}`,
       title: `Item ${key}`,
       dnd: {
         enableDragging: true,
