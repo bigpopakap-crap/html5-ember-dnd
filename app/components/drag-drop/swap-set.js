@@ -1,4 +1,4 @@
-import DragDropSet from './set';
+import ArraySet from './array-set';
 
 function indexOf(arr, propName, propVal) {
   for (var i = 0; i < arr.length; i++) {
@@ -18,7 +18,7 @@ function swap(arr, i, j) {
      .replace(j, 1, iItem);
 }
 
-export default DragDropSet.extend({
+export default ArraySet.extend({
   layoutName: 'components/drag-drop/set',
 
   _sortItems(dragKey, dropKey) {

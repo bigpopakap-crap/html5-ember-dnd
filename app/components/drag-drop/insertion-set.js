@@ -1,6 +1,6 @@
-import DragDropSet from './set';
+import ArraySet from './array-set';
 
-export default DragDropSet.extend({
+export default ArraySet.extend({
   layoutName: 'components/drag-drop/set',
 
   _sortItems(dragKey, dropKey) {

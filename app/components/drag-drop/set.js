@@ -44,6 +44,14 @@ export default Ember.Component.extend({
       });
     },
 
+    onDragEnter({ dropData: dropItemKey }) {
+      // Transfer the item into this set from its source
+      this.get('setTransferService').transfer({
+        targetSet: this,
+        targetItemKey: dropItemKey
+      });
+    },
+
     onDragOver({ dragData: draggedItemKey, dropData: dropItemKey }) {
       const sourceSet = this.get('setTransferService.sourceSet');
 
@@ -116,6 +124,40 @@ export default Ember.Component.extend({
     }
   },
 
+  /* BEGIN SET TRANSFER FUNCTIONS ***********/
+  removeItemForTransfer({ itemKeyToRemove }) {
+    this._removeItem(itemKeyToRemove);
+
+    this.sendAction('afterDragOut', {
+      draggedItemKey: itemKeyToRemove
+    });
+  },
+
+  insertItemForTransfer({ dragOverItemKey, itemKeyToAdd, itemToAdd }) {
+    this._insertItem(dragOverItemKey, itemToAdd);
+
+    this.sendAction('afterDragIn', {
+      draggedItemKey: itemKeyToAdd,
+      dropItemKey: dragOverItemKey
+    });
+  },
+
+  /* BEGIN OVERRIDABLE FUNCTIONS ************/
+  _sortItems(draggedItemKey, dropItemKey) {
+    this.sendAction('sortRequested', {
+      draggedItemKey,
+      dropItemKey
+    });
+  },
+
+  _removeItem(itemKeyToRemove) {
+    this.sendAction('removalRequested', itemKeyToRemove);
+  },
+
+  _insertItem(dragOverItemKey, itemToAdd) {
+    this.sendAction('insertionRequested', dragOverItemKey, itemToAdd);
+  },
+
   /* BEGIN HELPERS **************************/
   _getItemByKey(itemSortKey) {
     const items = this.get('items');
@@ -130,13 +172,6 @@ export default Ember.Component.extend({
 
   _getItemKeys() {
     return this.get('items').mapBy('sortKey');
-  },
-
-  _sortItems(draggedItemKey, dropItemKey) {
-    this.sendAction('sortRequested', {
-      draggedItemKey,
-      dropItemKey
-    });
   },
 
   _resetOrder() {

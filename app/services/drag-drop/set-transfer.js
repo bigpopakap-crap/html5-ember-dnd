@@ -16,6 +16,30 @@ export default Ember.Service.extend({
     };
   },
 
+  transfer({ targetSet, targetItemKey }) {
+    const { sourceSet, draggedItem } = this.getData();
+
+    if (sourceSet && targetSet && draggedItem && targetSet !== sourceSet) {
+      const draggedItemKey = Ember.get(draggedItem, 'sortKey');
+
+      sourceSet.removeItemForTransfer({
+        itemKeyToRemove: draggedItemKey
+      });
+      targetSet.insertItemForTransfer({
+        itemToAdd: draggedItem,
+        itemKeyToAdd: draggedItemKey,
+        dragOverItemKey: targetItemKey
+      });
+
+      // TODO(kapil) this shouldn't break if the above insert/removes don't work
+      // reset the data, including re-fetching the draggedItem in case it's a new reference
+      this.setData({
+        setComponent: targetSet,
+        draggedItem: targetSet.get('items').findBy('sortKey', draggedItemKey)
+      });
+    }
+  },
+
   clearData() {
     this.set('sourceSet', null);
     this.set('draggedItem', null);
