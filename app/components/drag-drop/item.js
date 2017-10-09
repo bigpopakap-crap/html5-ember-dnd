@@ -296,7 +296,7 @@ export default Ember.Component.extend({
       this.sendAction(
         'onDragEnter',
         this._eventData(evt, {
-          // unfortunately HTML5 dnd doesn't let you know what is being dragged over this
+          dragData,
           dropData: this.get('data')
         })
       );
@@ -315,7 +315,7 @@ export default Ember.Component.extend({
       this.sendAction(
         'onDragOver',
         this._eventData(evt, {
-          // unfortunately HTML5 dnd doesn't let you know what is being dragged over this
+          dragData: this.get('dataTransferService.dragData'),
           dropData: this.get('data')
         })
       );
@@ -336,7 +336,7 @@ export default Ember.Component.extend({
       this.sendAction(
         'onDragLeave',
         this._eventData(evt, {
-          // unfortunately HTML5 dnd doesn't let you know what is being dragged over this
+          dragData: this.get('dataTransferService.dragData'),
           dropData: this.get('data')
         })
       );

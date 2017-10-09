@@ -1,7 +1,6 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
-  dataTransferService: Ember.inject.service('drag-drop/data-transfer'),
   setTransferService: Ember.inject.service('drag-drop/set-transfer'),
   animationService: Ember.inject.service('drag-drop/animation'),
 
@@ -45,11 +44,13 @@ export default Ember.Component.extend({
       });
     },
 
-    onDragOver({ dropData: dropItemKey }) {
+    onDragOver({ dragData: draggedItemKey, dropData: dropItemKey }) {
       const sourceSet = this.get('setTransferService.sourceSet');
-      const draggedItemKey = this.get('dataTransferService.dragData');
 
-      // protects against drags from outside the browser tab
+      // Note: most of the time, sourceSet==this should be true because of the
+      // transfer in the dragEnter event. But this is here as a defensive protection.
+      // If this check fails, it's most likely because something from outside the browser
+      // tab was dragged here
       if (sourceSet === this) {
         // also against a million events when an element is dragged over itself
         if (draggedItemKey !== dropItemKey) {
@@ -75,6 +76,8 @@ export default Ember.Component.extend({
       // is dragged over itself because that is actually expected. By the time we
       // get to onDrop, the element order has already changed and the dragged element
       // is actually being dropped on itself
+      // Note 2: most of the time, sourceSet==this should be true because of the
+      // transfer in the dragEnter event. But this is here as a defensive protection
       const sourceSet = this.get('setTransferService.sourceSet');
       if (sourceSet === this) {
         this._dropSucceeded = true;
@@ -85,9 +88,7 @@ export default Ember.Component.extend({
       this._dragCancelled = true;
     },
 
-    onDragEnd() {
-      const draggedItemKey = this.get('dataTransferService.dragData');
-
+    onDragEnd({ dragData: draggedItemKey }) {
       // TODO(kapil) clean up this weird logic... it feels like we shouldn't
       // treat these two things differently
       const shouldResetOrder = (this.get('resetAfterDragCancel') && this._dragCancelled)
