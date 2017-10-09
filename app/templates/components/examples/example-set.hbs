@@ -1,54 +1,57 @@
-<div class="toggles">
-    <div class="input-group">
-        <label>Drag scope:</label>
-        {{input type="text" value=dragScope}}
+<button {{action "toggleToggles"}}>Toggles on/off</button>
+{{#if showToggles}}
+    <div class="toggles">
+        <div class="input-group">
+            <label>Drag scope:</label>
+            {{input type="text" value=dragScope}}
 
-        <label>Drop scope:</label>
-        {{input type="text" value=dropScope}}
-    </div>
+            <label>Drop scope:</label>
+            {{input type="text" value=dropScope}}
+        </div>
 
-    <div class="input-group">
-        {{input type="checkbox" checked=useSwap}}
-        <label>Swapping sort</label>
-    </div>
+        <div class="input-group">
+            {{input type="checkbox" checked=useSwap}}
+            <label>Swapping sort</label>
+        </div>
 
-    <div class="input-group">
-        {{input type="checkbox" checked=enableDragHandle}}
-        <label>Drag only by gray bar</label>
-    </div>
+        <div class="input-group">
+            {{input type="checkbox" checked=enableDragHandle}}
+            <label>Drag only by gray bar</label>
+        </div>
 
-    <div class="input-group">
-        {{input type="checkbox" checked=resetAfterDropOutside}}
-        <label>Reset after drop outside</label>
-    </div>
+        <div class="input-group">
+            {{input type="checkbox" checked=resetAfterDropOutside}}
+            <label>Reset after drop outside</label>
+        </div>
 
-    <div class="input-group">
-        {{input type="checkbox" checked=resetAfterDragCancel}}
-        <label>Reset after cancel</label>
-    </div>
+        <div class="input-group">
+            {{input type="checkbox" checked=resetAfterDragCancel}}
+            <label>Reset after cancel</label>
+        </div>
 
-    <div class="input-group">
-        {{input type="checkbox" checked=enableAnimation}}
-        <label>Animations. Speed: </label>
-        {{input type="text" value=animationDurationInput}}
-    </div>
+        <div class="input-group">
+            {{input type="checkbox" checked=enableAnimation}}
+            <label>Animations. Speed: </label>
+            {{input type="text" value=animationDurationInput}}
+        </div>
 
-    <div class="input-group">
-        {{input type="checkbox" checked=enableTouch}}
-        <label>Touch enabled</label>
-    </div>
+        <div class="input-group">
+            {{input type="checkbox" checked=enableTouch}}
+            <label>Touch enabled</label>
+        </div>
 
-    <div class="input-group">
-        {{input type="checkbox" checked=enableKeyboard}}
-        <label>Keyboard enabled</label>
-    </div>
+        <div class="input-group">
+            {{input type="checkbox" checked=enableKeyboard}}
+            <label>Keyboard enabled</label>
+        </div>
 
-    <div class="input-group">
-        {{input type="text" value=newItemText}}
-        <button {{action "createItemFirst"}}>Create first</button>
-        <button {{action "createItemLast"}}>Create last</button>
+        <div class="input-group">
+            {{input type="text" value=newItemText}}
+            <button {{action "createItemFirst"}}>Create first</button>
+            <button {{action "createItemLast"}}>Create last</button>
+        </div>
     </div>
-</div>
+{{/if}}
 
 <div class="{{containerClass}}">
     {{#component componentName items
@@ -79,6 +82,6 @@
 
 <div class="data-display">
     {{#each items as |item|}}
-        <span>{{item.key}}</span>
+        <span>{{item.sortKey}}</span>
     {{/each}}
 </div>

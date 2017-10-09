@@ -17,6 +17,8 @@ export default Ember.Component.extend({
   enableKeyboard: true,
   animationDurationInput: 'fast',
 
+  showToggles: true,
+
   componentName: Ember.computed('useSwap', function() {
     return this.get('useSwap') ? 'drag-drop/swap-set' : 'drag-drop/insertion-set';
   }),
@@ -56,6 +58,10 @@ export default Ember.Component.extend({
   },
 
   actions: {
+    toggleToggles() {
+      this.toggleProperty('showToggles');
+    },
+
     createItemFirst() {
       const newItem = this._createItem(this._advanceItemKey());
       this.get('items').insertAt(0, newItem);
