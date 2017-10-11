@@ -682,7 +682,7 @@ export default Ember.Component.extend({
 
     if (!dragScopeArray || !dropScopeArray) {
       // neither thing can be moved
-      return true;
+      return false;
     } else {
       let foundMatch = false;
 
