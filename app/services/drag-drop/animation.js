@@ -29,7 +29,10 @@ const animateFnGenerator = function(animationOptions = {}) {
 
         // Register an internal waiter when in testing, so we can wait for the animation to be done
         let isDone = false;
-        Ember.Test && Ember.Test.registerWaiter(() => isDone);
+        if (Ember.Test) {
+          Ember.Test.registerWaiter(() => isDone);
+        }
+
         _executeAnimations(animations, () => {
           _afterAnimating(elements);
           resolve();
