@@ -50,6 +50,7 @@ function makeArray(maybeArray) {
 
 export default Ember.Component.extend({
   dataTransferService: Ember.inject.service('drag-drop/data-transfer'),
+  itemStateService: Ember.inject.service('drag-drop/item-state'),
 
   // PASSED IN
   data: '', // REQUIRED - a string to pass along with the element
@@ -77,17 +78,25 @@ export default Ember.Component.extend({
                       // when an element is dropped on this element
 
   // PRIVATE
-  isMouseDown: false,
-  isSpaceKeyTyped: false,
-  isHovered: false, // can't use :hover because of a webkit bug with :hover being overly persistent
-                    // with drag and drop: http://stackoverflow.com/questions/17946886/hover-sticks-to-element-on-drag-and-drop
-  isDragging: false,
-  isDraggingByKey: false,
-  isDraggedOver: false,
-  dragTarget: null, // the target element of the drag (which part of the element the mouse is on)
-  $dragOverElem: null, // used for touch dragging, it's the element we are currently dragging over
-  $dragGhost: null, // the JQuery element that we are moving around with the drag
-                    // we do this because HTML5 drag and drop doesn't do a good job with that
+  itemState: Ember.computed('itemStateService', 'data', function () {
+    return this.get('itemStateService').forItem(this.get('data'));
+  }),
+
+  isMouseDown: Ember.computed.alias('itemState.isMouseDown'),
+  isSpaceKeyTyped: Ember.computed.alias('itemState.isSpaceKeyTyped'),
+  // can't use :hover because of a webkit bug with :hover being overly persistent
+  // with drag and drop: http://stackoverflow.com/questions/17946886/hover-sticks-to-element-on-drag-and-drop
+  isHovered: Ember.computed.alias('itemState.isHovered'),
+  isDragging: Ember.computed.alias('itemState.isDragging'),
+  isDraggingByKey: Ember.computed.alias('itemState.isDraggingByKey'),
+  isDraggedOver: Ember.computed.alias('itemState.isDraggedOver'),
+  // the target element of the drag (which part of the element the mouse is on)
+  dragTarget: Ember.computed.alias('itemState.dragTarget'),
+  // used for touch dragging, it's the element we are currently dragging over
+  $dragOverElem: Ember.computed.alias('itemState.$dragOverElem'),
+  // the JQuery element that we are moving around with the drag
+  // we do this because HTML5 drag and drop doesn't do a good job with that
+  $dragGhost: Ember.computed.alias('itemState.$dragGhost'),
 
   isPressed: Ember.computed.and('isMouseDown'),
   isGrabbedByMouse: Ember.computed.and('enableDragging', 'isMouseDown', 'isDragHandlePressed'),
@@ -247,6 +256,9 @@ export default Ember.Component.extend({
     },
 
     dragEnd(evt) {
+      // TODO(kapil) figure out how to handle the fact that this element
+      // can be destroyed if it was moved to another list
+
       // don't check enableDragging because clearly we've already allowed
       // a drag to start on this element
 
