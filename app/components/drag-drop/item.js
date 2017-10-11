@@ -65,29 +65,29 @@ export default Ember.Component.extend({
   enableDragging: false, // use this flag to turn on/off dragging behavior
   enableDropping: false, // use this flag to enable/disable this element as a drop target
   dragHandleSelector: null, // (optional) a CSS selector of the part of this element from
- 														// where a drag can be initiated
+                            // where a drag can be initiated
   enableTouch: true,
   enableKeyboard: true,
   tabIndex: 0,
 
   // SHOULD PROBABLY BE PRIVATE
   dragEffectAllowed: 'all', // HTML5 drag property that tells the drop area which kinds of actions
-  													// are supported by this draggable element when it is dropped
+                            // are supported by this draggable element when it is dropped
   dropEffect: 'move', // HTML5 drop property that indicates what kind of action will occur
-  										// when an element is dropped on this element
+                      // when an element is dropped on this element
 
   // PRIVATE
   isMouseDown: false,
   isSpaceKeyTyped: false,
   isHovered: false, // can't use :hover because of a webkit bug with :hover being overly persistent
- 										// with drag and drop: http://stackoverflow.com/questions/17946886/hover-sticks-to-element-on-drag-and-drop
+                    // with drag and drop: http://stackoverflow.com/questions/17946886/hover-sticks-to-element-on-drag-and-drop
   isDragging: false,
   isDraggingByKey: false,
   isDraggedOver: false,
   dragTarget: null, // the target element of the drag (which part of the element the mouse is on)
   $dragOverElem: null, // used for touch dragging, it's the element we are currently dragging over
   $dragGhost: null, // the JQuery element that we are moving around with the drag
-  									// we do this because HTML5 drag and drop doesn't do a good job with that
+                    // we do this because HTML5 drag and drop doesn't do a good job with that
 
   isPressed: Ember.computed.and('isMouseDown'),
   isGrabbedByMouse: Ember.computed.and('enableDragging', 'isMouseDown', 'isDragHandlePressed'),
