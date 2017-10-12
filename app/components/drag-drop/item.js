@@ -175,6 +175,10 @@ export default Ember.Component.extend({
     'ariaDropEffect:aria-dropeffect'
   ],
 
+  didInsertElement() {
+    this._attachDragGhost(this.get('$dragGhost'));
+  },
+
   actions: {
     /* BEGIN REGULAR MOUSE EVENTS *******************/
     mouseEnter() {
@@ -451,7 +455,7 @@ export default Ember.Component.extend({
       offsetY: this.get('_touchOffsetY')
     });
 
-    return true;
+    return false;
   },
 
   touchEnd(evt) {

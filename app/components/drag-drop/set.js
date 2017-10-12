@@ -188,9 +188,14 @@ export default Ember.Component.extend({
     const currentItemKeys = this._getItemKeys();
 
     this.set('isAnimating', true);
-    this.get('animationService').animate($scope, previousItemKeys, currentItemKeys, {
-      duration: this.get('animationDuration')
-    }).then(() => {
+    this.get('animationService').animate(
+      $scope,
+      previousItemKeys,
+      currentItemKeys,
+      {
+        duration: this.get('animationDuration')
+      }
+    ).then(() => {
       this.set('isAnimating', false);
     });
   }
